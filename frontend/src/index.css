@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/Manrope-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/Manrope-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/Manrope-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/Manrope-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/Manrope-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-display: swap;
+}
+
+@theme {
+  /* Brand */
+  --color-primary: #ff4a1c;
+  --color-primary-hover: #e63e12;
+  --color-primary-soft: #fff0eb;
+  --color-navy: #101E32;
+  --color-navy-2: #1b2b45;
+  --color-navy-text: #d5dfec;
+  --color-brand-blue: #1e4b8f;
+
+  /* Surfaces and text */
+  --color-page: #f5f8fc;
+  --color-line: #d6dde8;
+  --color-ink: #1f2937;
+  --color-heading: #333a44;
+  --color-muted: #6b7280;
+
+  /* Feedback */
+  --color-success: #16a34a;
+  --color-danger: #f0352b;
+  --color-warning-soft: #fff1c9;
+  --color-warning-text: #9a2a00;
+
+  /* Font and shadow */
+  --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --shadow-card: 0 2px 8px rgb(15 30 51 / 0.08);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+}

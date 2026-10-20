@@ -1,0 +1,63 @@
+frontend/
+├── public/
+│   ├── icons/                    # PWA icons
+│   └── favicon.ico
+└── src/
+    ├── api/
+    ├── app/
+    │   ├── router.jsx
+    │   └── providers.jsx
+    ├── context/
+    │   └── AuthContext.jsx
+    ├── routes/
+    │   ├── ProtectedRoute.jsx
+    │   └── RoleRoute.jsx
+    ├── components/
+    │   ├── ui/
+    │   ├── shared/
+    │   ├── pwa/                  # InstallPrompt, OfflineBanner, UpdateToast
+    │   └── layout/
+    │       ├── PublicLayout.jsx  # website navbar + footer, Login/Sign up buttons
+    │       ├── ClientLayout.jsx  # app-style shell, bottom tab bar on mobile
+    │       ├── JobseekerLayout.jsx
+    │       └── AdminLayout.jsx
+    ├── pages/
+    │   ├── public/               # Landing, Browse/Search, ServiceDetail, JobseekerPublicProfile,
+    │   │                         # HowItWorks, Login, Signup, RoleSelect, Verify, Offline
+    │   ├── client/
+    │   ├── jobseeker/
+    │   ├── shared/
+    │   └── admin/
+    ├── hooks/
+    │   ├── useAuth.js
+    │   ├── useOnlineStatus.js
+    │   └── useInstallPrompt.js
+    └── lib/
+
+
+
+pages/
+├── public/        Home, HowItWorks, ForClients, ForJobSeekers, About     ✓ done
+├── auth/          Login, Signup, ForgotPassword                          ✓ done
+├── shared/        Verify, Browse, ProfileDetail, Settings                (Settings is new)
+├── client/
+│   ├── Search.jsx            open to all clients
+│   ├── TrustProfile.jsx      open
+│   ├── Bookings.jsx          verified only
+│   ├── Book.jsx              verified only   (route: book/:serviceId)
+│   ├── Checkout.jsx          verified only
+│   ├── CancelRequest.jsx     verified only   (route: cancel/:bookingId)
+│   └── ExtensionReply.jsx    verified only   (route: extension/:bookingId)
+├── jobseeker/
+│   ├── Dashboard.jsx         open (shows the "Verify to start offering services" card)
+│   ├── TrustProfile.jsx      open
+│   ├── MyServices.jsx        verified only
+│   ├── Availability.jsx      verified only
+│   ├── BookingRequests.jsx   verified only
+│   ├── ActiveJob.jsx         verified only
+│   └── Earnings.jsx          verified only
+└── admin/
+    ├── IdQueue.jsx           ✓ done
+    ├── PostQueue.jsx
+    ├── Cancellations.jsx
+    └── Reports.jsx

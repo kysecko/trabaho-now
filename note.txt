@@ -1,0 +1,21 @@
+Folder	Its one job
+pages/	What a screen shows
+components/	Reusable pieces (buttons, cards, layouts)
+api/	Talking to Laravel, nothing else
+context/, hooks/	Shared state like the logged-in user
+routes/ (frontend)	Who may open which screen
+routes/ (Laravel)	Which URL goes to which controller
+Controllers/	Receive the request, return the response
+Requests/	Validate input
+Services/	Business rules (tokens, refunds, status changes)
+Models/	Database tables as PHP classes
+Policies/	Who may act on a specific booking (only its client or jobseeker can cancel)
+Resources/	What JSON goes out
+
+
+LARAVEL COMMAND GUIDE
+
+php artisan config:clear   # .env and config/*.php changes
+php artisan route:clear    # routes/*.php changes
+php artisan cache:clear    # application cache
+php artisan view:clear     # Blade views

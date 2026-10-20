@@ -1,0 +1,60 @@
+backend/
+├── app/
+│   ├── Enums/
+│   │   ├── UserRole.php              # client, jobseeker, admin
+│   │   ├── BookingStatus.php         # pending, accepted, in_progress, completed, cancelled, disputed
+│   │   ├── PaymentStatus.php
+│   │   └── TokenTransactionType.php  # purchase, deduct, refund
+│   ├── Http/
+│   │   ├── Controllers/Api/
+│   │   │   ├── Auth/                 # Register, Login, Logout, Verify
+│   │   │   ├── Public/               # ServiceController (search, detail)
+│   │   │   ├── Client/               # Booking, Checkout, Extension
+│   │   │   ├── Jobseeker/            # Service, Availability, BookingRequest, ActiveJob, Earnings
+│   │   │   ├── Shared/               # Notification, Review, Report, Block, Account, TrustProfile
+│   │   │   └── Admin/                # IdQueue, PostQueue, Cancellation, Report, Dispute
+│   │   ├── Middleware/
+│   │   │   ├── EnsureRole.php
+│   │   │   └── EnsureVerified.php
+│   │   ├── Requests/                 # form validation, grouped by feature
+│   │   └── Resources/                # JSON response shapes
+│   ├── Models/
+│   │   ├── User.php
+│   │   ├── JobseekerProfile.php
+│   │   ├── IdVerification.php
+│   │   ├── Service.php
+│   │   ├── Availability.php
+│   │   ├── Booking.php
+│   │   ├── BookingExtension.php
+│   │   ├── Cancellation.php
+│   │   ├── TokenWallet.php
+│   │   ├── TokenTransaction.php
+│   │   ├── Payment.php
+│   │   ├── Review.php
+│   │   ├── Report.php
+│   │   └── Block.php
+│   ├── Policies/                     # e.g. BookingPolicy: who can accept/cancel/complete
+│   ├── Services/                     # business logic lives here, not in controllers
+│   │   ├── BookingService.php
+│   │   ├── TokenService.php          # check balance, deduct, refund
+│   │   ├── CancellationService.php   # refund rules
+│   │   ├── PayMongoService.php
+│   │   └── TrustScoreService.php
+│   ├── Notifications/                # booking requested, accepted, cancelled, etc.
+│   └── Jobs/                         # e.g. expire unanswered requests
+├── routes/
+│   ├── api.php                       # includes the files below
+│   └── api/
+│       ├── auth.php
+│       ├── public.php
+│       ├── client.php
+│       ├── jobseeker.php
+│       ├── shared.php
+│       └── admin.php
+└── database/
+    ├── migrations/
+    ├── factories/
+    └── seeders/
+
+
+

@@ -1,0 +1,8 @@
+'name' => 'Test Client',
+>>     'email' => 'hehirah674@iconcubic.com',
+>>     'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+>>     'role' => 'client',
+>>     'is_verified' => true,
+>>     'email_verified_at' => now(),
+
+
