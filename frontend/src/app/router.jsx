@@ -12,10 +12,9 @@ import UnverifiedRoute from "./guards/UnVerified";
 
 // Public Pages
 import Home from "../pages/public/Home";
+import Jobseekers from "../pages/public/JobSeekers"; 
+import Services from "../pages/public/Services"; 
 import HowItWorks from "../pages/public/HowItWorks";
-import ForClients from "../pages/public/ForClients";
-import ForJobSeekers from "../pages/public/ForJobSeekers";
-import About from "../pages/public/About";
 
 // Auth Pages
 import Login from "../pages/auth/Login";
@@ -27,7 +26,6 @@ import Dashboard from "../pages/shared/Dashboard";
 import Verify from "../pages/shared/Verify";
 import Browse from "../pages/shared/Browse";
 import ProfileDetail from "../pages/shared/ProfileDetail";
-
 
 // Modular Route Functions
 import ClientRoutes from "./routes/clientRoutes";
@@ -41,10 +39,12 @@ export default function AppRouter() {
       {/* 1. PUBLIC: Accessible to everyone */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
+
+        {/* The three navbar tabs */}
+        <Route path="/jobseekers" element={<Jobseekers />} />
+        <Route path="/services" element={<Services />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/for-clients" element={<ForClients />} />
-        <Route path="/for-job-seekers" element={<ForJobSeekers />} />
-        <Route path="/about" element={<About />} />
+
       </Route>
 
       {/* 2. AUTH: Login, Signup, Forgot Password */}
@@ -53,10 +53,10 @@ export default function AppRouter() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
       </Route>
-      
+
       {/* Shared */}
       <Route element={<RoleRoute role={["client", "jobseeker"]} />}>
-        <Route element={<UnverifiedRoute />}> {/* <-- ADD THIS */}
+        <Route element={<UnverifiedRoute />}>
           <Route element={<SharedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/verify" element={<Verify />} />
