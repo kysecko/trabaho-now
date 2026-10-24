@@ -14,16 +14,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'is_verified'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_verified', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     public function sendEmailVerificationNotification()
     {
-        $this->notify(new VerifyEmailNotification());
     }
 
     protected function casts(): array
