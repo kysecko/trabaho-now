@@ -63,7 +63,7 @@ const faqs = [
   },
   {
     q: "How is my personal information protected?",
-    a: "TrabahoNow is designed around the Data Privacy Act of 2012 (RA 10173). You consent at signup, contact details are shared only after a booking is accepted, and ID images are visible only to admins.",
+    a: "TrabahoNow is designed around the Data Privacy Act of 2012 (RA 10173). You consent at registering, contact details are shared only after a booking is accepted, and ID images are visible only to admins.",
   },
   {
     q: "Will I get push notifications?",
@@ -188,7 +188,7 @@ export default function HowItWorks() {
             Ready to get started? <span className="text-primary">Trabaho na!</span>
           </h2>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <PrimaryLink to="/signup">Create an account now</PrimaryLink>
+            <PrimaryLink to="/register">Create an account now</PrimaryLink>
             <SecondaryLink
               to="/jobseekers"
               className="border-white text-white hover:bg-white/10"

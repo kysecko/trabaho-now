@@ -49,7 +49,7 @@ const hireCards = [
     title: "Looking for work?",
     text: "Post the services you offer, set your availability and let nearby clients come to you.",
     cta: "Offer your skills",
-    to: "/signup",
+    to: "/register",
   },
 ];
 
@@ -67,23 +67,24 @@ export default function Home() {
   return (
     <>
       {/* hero */}
-      <section className="relative w-full h-[85vh] min-h-140 md:h-[80vh] lg:h-[85vh] overflow-hidden">
+      <section className="relative isolate h-screen min-h-150 w-full overflow-hidden">
         <img
           src="/public-images/home-hero.png"
           alt="TrabahoNow freelance marketplace hero"
-          className="absolute inset-0 h-full w-full object-cover object-center sm:object-center md:object-[center_30%]"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
+
         <div className="absolute inset-0 bg-black/50" />
 
-        <div className="relative z-10 flex h-full items-center">
-          <div className="mx-auto w-full max-w-4xl px-5 sm:px-8 lg:px-6 text-center text-white">
+        <div className="relative z-10 flex h-full items-center justify-center">
+          <div className="mx-auto w-full max-w-4xl px-5 text-center text-white sm:px-8 lg:px-6">
             <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
               Find work for today. Or hire for today.
               <br />
               <span className="text-primary">Trabaho na!</span>
             </h1>
 
-            <p className="mt-5 text-base leading-relaxed text-navy-text sm:mt-6 sm:text-lg md:text-xl max-w-2xl mx-auto">
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/90 sm:mt-6 sm:text-lg md:text-xl">
               Need a worker today? See who&apos;s free near you. Want work? Post
               your job offered. Everything is shown clearly: the rate, the
               availability, and past reviews. You decide before anyone commits —
@@ -91,7 +92,10 @@ export default function Home() {
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-4 sm:mt-10">
-              <PrimaryLink to="/signup">Create an account now</PrimaryLink>
+              <PrimaryLink to="/register">
+                Create an account now
+              </PrimaryLink>
+
               <SecondaryLink
                 to="/jobseekers"
                 className="border-white text-white hover:bg-white/10"
@@ -245,7 +249,7 @@ export default function Home() {
             Maria, Bulacan.
           </p>
           <div className="mt-8">
-            <PrimaryLink to="/signup">Create an account now</PrimaryLink>
+            <PrimaryLink to="/register">Create an account now</PrimaryLink>
           </div>
         </div>
       </section>

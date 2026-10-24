@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
-import { loginUser, googleLogin } from "../../api/auth";
+import { loginUser } from "../../api/auth";
 import { useAuth } from "../../context/AuthContext";
 import Field from "../../components/ui/Field";
-import { GoogleLogin } from "@react-oauth/google";
 import { roleHome } from "../../lib/roleHome";
+
+import { EnvelopeIcon, ShieldCheckIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -14,8 +15,9 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // SMART REDIRECT LOGIC
+  // smart redirect logic
   if (user) return <Navigate to={from || roleHome(user)} replace />;
 
   const first = (key) => errors[key]?.[0];
@@ -27,21 +29,6 @@ export default function Login() {
     setErrors({});
     try {
       const data = await loginUser(form);
-      login(data.token, data.user);  console.log("Logged in user:", JSON.stringify(data.user, null, 2)); 
-    } catch (err) {
-      console.log("Login Error Details:", err);
-      setErrors(err.errors || { form: [err.message] });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setSubmitting(true);
-    setErrors({});
-    try {
-      const data = await googleLogin(credentialResponse.credential, "client");
       login(data.token, data.user);
     } catch (err) {
       setErrors(err.errors || { form: [err.message] });
@@ -50,13 +37,18 @@ export default function Login() {
     }
   };
 
-
   return (
     <div className="w-full">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-navy sm:text-3xl">Welcome back</h1>
-        <p className="mt-2 text-sm text-muted">Log in to your TrabahoNow account</p>
+        <h1 className="text-2xl font-bold text-navy sm:text-3xl">Welcome back!</h1>
+        <p className="mt-2 text-sm text-muted">Log in to continue — to your job search or your services.</p>
       </div>
+
+      {location.state?.verified && (
+        <div className="mb-5 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+          Email verified. Please log in.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {first("form") && (
@@ -65,8 +57,27 @@ export default function Login() {
           </div>
         )}
 
-        <Field label="Email" name="email" type="email" value={form.email} onChange={update} error={first("email")} required />
-        <Field label="Password" name="password" type="password" value={form.password} onChange={update} error={first("password")} required />
+        <Field label="Email" name="email" type="email" value={form.email} onChange={update} error={first("email")} required icon={<EnvelopeIcon className="w-4 h-4" />} />
+
+        <Field
+          label="Password"
+          name="password"
+          type={showPassword ? "text" : "password"}
+          value={form.password}
+          onChange={update}
+          error={first("password")}
+          required
+          icon={<ShieldCheckIcon className="w-4 h-4" />}
+          rightIcon={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-muted hover:text-navy"
+            >
+              {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+            </button>
+          }
+        />
 
         <div className="flex justify-end">
           <Link to="/forgot-password" state={{ from }} className="text-sm font-semibold text-primary hover:underline">
@@ -83,24 +94,10 @@ export default function Login() {
         </button>
       </form>
 
-      <div className="my-6 flex items-center before:mt-0.5 before:flex-1 before:border-t before:border-gray-300 after:mt-0.5 after:flex-1 after:border-t after:border-gray-300">
-        <span className="mx-4 text-sm text-gray-500">Or continue with</span>
-      </div>
-
-      <div className="w-full flex justify-center">
-        <GoogleLogin
-          onSuccess={handleGoogleSuccess}
-          onError={() => setErrors({ form: ['Google Login failed'] })}
-          theme="outline"
-          size="large"
-          width="100%"
-        />
-      </div>
-
       <p className="mt-6 text-center text-sm text-muted">
-        No account yet?{" "}
-        <Link to="/signup" state={{ from }} className="font-semibold text-primary hover:underline">
-          Sign up
+        Don't have an account?{" "}
+        <Link to="/register" state={{ from }} className="font-semibold text-primary hover:underline">
+          Register here.
         </Link>
       </p>
     </div>

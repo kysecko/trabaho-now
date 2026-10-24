@@ -12,13 +12,15 @@ import UnverifiedRoute from "./guards/UnVerified";
 
 // Public Pages
 import Home from "../pages/public/Home";
-import Jobseekers from "../pages/public/JobSeekers"; 
-import Services from "../pages/public/Services"; 
+import Jobseekers from "../pages/public/JobSeekers";
+import Services from "../pages/public/Services";
 import HowItWorks from "../pages/public/HowItWorks";
+import Privacy from "../pages/public/Privacy";
+import Terms from "../pages/public/Terms";
 
 // Auth Pages
 import Login from "../pages/auth/Login";
-import Signup from "../pages/auth/Signup";
+import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 
 // Shared Pages
@@ -32,29 +34,35 @@ import ClientRoutes from "./routes/clientRoutes";
 import JobseekerRoutes from "./routes/jobseekerRoutes";
 import AdminRoutes from "./routes/adminRoutes";
 import SharedRoutes from "./routes/sharedRoutes";
+import VerifyEmail from "../pages/auth/VerifyEmail";
 
 export default function AppRouter() {
   return (
     <Routes>
-      {/* 1. PUBLIC: Accessible to everyone */}
+      {/* landing page */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
 
-        {/* The three navbar tabs */}
+        {/* tabs */}
         <Route path="/jobseekers" element={<Jobseekers />} />
         <Route path="/services" element={<Services />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
 
       </Route>
-
-      {/* 2. AUTH: Login, Signup, Forgot Password */}
+      
+      {/* separate routes for the legal */}
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
+      
+      {/* 2.authentication */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify" element={<VerifyEmail/>} />
       </Route>
 
-      {/* Shared */}
+      {/* shared */}
       <Route element={<RoleRoute role={["client", "jobseeker"]} />}>
         <Route element={<UnverifiedRoute />}>
           <Route element={<SharedLayout />}>
@@ -71,7 +79,7 @@ export default function AppRouter() {
       {AdminRoutes()}
       {SharedRoutes()}
 
-      {/* 5. 404: Catch-all */}
+      {/* error 404 */}
       <Route path="*" element={<Placeholder title="Page not found" />} />
     </Routes>
   );
