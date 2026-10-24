@@ -61,10 +61,6 @@ export default function Services() {
             ))}
           </div>
 
-          <p className="mt-8 text-center text-sm text-gray-600">
-            Categories shown are examples. Jobseekers post their own services,
-            and every post is reviewed before it goes live.
-          </p>
         </Container>
       </section>
 
@@ -78,7 +74,7 @@ export default function Services() {
             Jobseekers never pay credits.
           </p>
           <div className="mt-8">
-            <PrimaryLink to="/signup">Create an account now</PrimaryLink>
+            <PrimaryLink to="/register">Create an account now</PrimaryLink>
           </div>
         </Container>
       </section>

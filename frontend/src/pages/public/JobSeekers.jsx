@@ -201,7 +201,7 @@ export default function Jobseekers() {
             type="button"
             onClick={() => setOnlyAvailable((value) => !value)}
             aria-pressed={onlyAvailable}
-            className={`inline-flex items-center gap-2.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${onlyAvailable
+            className={`inline-flex items-center gap-2.5 rounded-full border px-4 py-2 text-sm font-semibold transition  cursor-pointer ${onlyAvailable
                 ? "border-green-600 bg-green-100 text-green-800"
                 : "border-gray-300 bg-white text-navy hover:border-navy"
               }`}
@@ -237,7 +237,7 @@ export default function Jobseekers() {
               No jobseekers match these filters yet.
             </p>
 
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-gray-600 cursor-pointer">
               Try another service or turn off
               {" "} &ldquo;Available now only&rdquo;.
             </p>

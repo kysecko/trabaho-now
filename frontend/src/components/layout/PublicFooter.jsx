@@ -14,7 +14,7 @@ const columns = [
     title: "Account",
     links: [
       { to: "/login", label: "Log in" },
-      { to: "/signup", label: "Create an account" },
+      { to: "/register", label: "Create an account" },
       { to: "/download", label: "Download the app" },
     ],
   },
