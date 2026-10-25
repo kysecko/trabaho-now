@@ -23,7 +23,7 @@ frontend/
     │       └── AdminLayout.jsx
     ├── pages/
     │   ├── public/               # Landing, Browse/Search, ServiceDetail, JobseekerPublicProfile,
-    │   │                         # HowItWorks, Login, Signup, RoleSelect, Verify, Offline
+    │   │                         # HowItWorks, Login, Register, RoleSelect, Verify, Offline
     │   ├── client/
     │   ├── jobseeker/
     │   ├── shared/
@@ -38,7 +38,7 @@ frontend/
 
 pages/
 ├── public/        Home, HowItWorks, ForClients, ForJobSeekers, About     ✓ done
-├── auth/          Login, Signup, ForgotPassword                          ✓ done
+├── auth/          Login, Register, ForgotPassword                          ✓ done
 ├── shared/        Verify, Browse, ProfileDetail, Settings                (Settings is new)
 ├── client/
 │   ├── Search.jsx            open to all clients

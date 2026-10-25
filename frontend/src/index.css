@@ -36,10 +36,18 @@
   --color-primary: #ff4a1c;
   --color-primary-hover: #e63e12;
   --color-primary-soft: #fff0eb;
-  --color-navy: #101E32;
+  --color-navy: #101e32;
   --color-navy-2: #1b2b45;
   --color-navy-text: #d5dfec;
   --color-brand-blue: #1e4b8f;
+
+
+  /* ADMIN COLORS */
+  --color-admin-sidebar: #0b1524; 
+  --color-admin-sidebar-hover: #16243a; 
+  --color-admin-active: #2563eb; 
+  --color-admin-bg: #f8fafc; 
+  --color-admin-text-muted: #94a3b8; 
 
   /* Surfaces and text */
   --color-page: #f5f8fc;

@@ -1,22 +1,38 @@
 import { Route, Navigate } from "react-router-dom";
 import AdminLayout from "../../components/layout/AdminLayout";
 import RoleRoute from "../guards/RoleRoute";
-import Placeholder from "../../components/shared/Placeholder";
 
 // Import Admin Pages
-import IdQueue from "../../pages/admin/IdQueue";
+import AdminDashboard from "../../pages/admin/AdminDashboard";
+import UserManagement from "../../pages/admin/UserManagement"; 
+import VerificationQueue from "../../pages/admin/VerificationQueue";
+import TransactionLogs from "../../pages/admin/TransactionLogs";
+import CreditManagement from "../../pages/admin/CreditManagement";
+import ServiceListings from "../../pages/admin/ServiceListings";
+import Reports from "../../pages/admin/Reports";
+import Settings from "../../pages/admin/Settings";
 
 export default function AdminRoutes() {
-  const P = (title) => <Placeholder title={title} />;
-
   return [
     <Route key="admin" element={<RoleRoute role="admin" />}>
       <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<Navigate to="id-queue" replace />} />
-        <Route path="id-queue" element={<IdQueue />} />
-        <Route path="post-queue" element={P("Post queue")} />
-        <Route path="cancellations" element={P("Cancellations")} />
-        <Route path="reports" element={P("Reports")} />
+        <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        
+        <Route path="manage-users" element={<UserManagement />} />
+        <Route path="verification" element={<VerificationQueue />} />
+        <Route path="transactions" element={<TransactionLogs />} />
+        <Route path="credits" element={<CreditManagement />} />
+        <Route path="services" element={<ServiceListings />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="settings" element={<Settings />} />
+        
+        {/* Placeholder for ones you haven't built yet */}
+        <Route path="cancellations" element={<div>Cancellations</div>} />
+        <Route path="notifications" element={<div>Notifications</div>} />
+        <Route path="help" element={<div>Help</div>} />
+        
+        <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
     </Route>
   ];
