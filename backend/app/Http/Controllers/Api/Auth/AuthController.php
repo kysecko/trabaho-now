@@ -10,14 +10,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\Events\Registered;
-use Google\Client as GoogleClient;
-use Illuminate\Support\Str;
+use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
+    // register
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -40,6 +41,7 @@ class AuthController extends Controller
         ], 201);
     }
 
+    // login
     public function login(Request $request)
     {
         $data = $request->validate([
@@ -61,41 +63,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function googleLogin(Request $request)
-    {
-        $request->validate([
-            'id_token' => 'required|string',
-            'role' => ['required', Rule::in([UserRole::Client->value, UserRole::Jobseeker->value])],
-        ]);
-
-        $client = new GoogleClient(['client_id' => env('GOOGLE_CLIENT_ID')]);
-
-        try {
-            $payload = $client->verifyIdToken($request->id_token);
-            if (!$payload) {
-                return response()->json(['message' => 'Invalid Google token'], 401);
-            }
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Google verification failed'], 401);
-        }
-
-        $email = $payload['email'];
-
-        $user = User::create([
-            'name' => $payload['name'] ?? explode('@', $email)[0],
-            'email' => $email,
-            'password' => Hash::make(Str::random(24)),
-            'role' => $request->role,
-            'email_verified_at' => now(),
-            'is_verified' => true,
-        ]);
-
-        return response()->json([
-            'token' => $user->createToken('web')->plainTextToken,
-            'user' => $user,
-        ]);
-    }
-
+    // logout
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -103,6 +71,7 @@ class AuthController extends Controller
         return response()->noContent();
     }
 
+    // gmail otp sender
     public function sendOtp(Request $request)
     {
         $user = $request->user();
@@ -116,12 +85,13 @@ class AuthController extends Controller
         Cache::put("otp:{$user->id}", Hash::make($code), now()->addMinutes(10));
         Cache::forget("otp_attempts:{$user->id}");
 
-        // THIS IS THE ONLY LINE THAT SHOULD SEND AN EMAIL
+        // send email
         Mail::to($user->email)->send(new OtpMail($code));
 
         return response()->json(['message' => 'Verification code sent.']);
     }
 
+    // verification
     public function verifyOtp(Request $request)
     {
         $request->validate(['code' => 'required|digits:6']);
@@ -135,7 +105,7 @@ class AuthController extends Controller
 
         $hash = Cache::get("otp:{$user->id}");
 
-        if (!$hash || !Hash::check($request->code, $hash)) {
+        if (! $hash || ! Hash::check($request->code, $hash)) {
             Cache::put($attemptsKey, Cache::get($attemptsKey, 0) + 1, now()->addMinutes(10));
             return response()->json(['message' => 'Invalid or expired code.'], 422);
         }
@@ -149,5 +119,45 @@ class AuthController extends Controller
         ])->save();
 
         return response()->json(['user' => $user->fresh()]);
+    }
+
+    // forgot password reset
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        Password::sendResetLink($request->only('email'));
+
+        return response()->json([
+            'message' => 'We’ve sent a password reset link to your email.
+Please check your inbox and follow the link to reset your password.',
+        ]);
+    }
+
+    // reset and creating new
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill(['password' => Hash::make($password)])
+                    ->setRememberToken(Str::random(60));
+                $user->save();
+                $user->tokens()->delete(); // log out all other devices
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            return response()->json(['message' => 'This reset link is invalid or has expired.'], 422);
+        }
+
+        return response()->json(['message' => 'Password updated. You can now log in.']);
     }
 }

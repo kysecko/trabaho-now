@@ -35,6 +35,7 @@ import JobseekerRoutes from "./routes/jobseekerRoutes";
 import AdminRoutes from "./routes/adminRoutes";
 import SharedRoutes from "./routes/sharedRoutes";
 import VerifyEmail from "../pages/auth/VerifyEmail";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 export default function AppRouter() {
   return (
@@ -60,6 +61,7 @@ export default function AppRouter() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify" element={<VerifyEmail/>} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
       {/* shared */}

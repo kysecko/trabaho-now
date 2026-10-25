@@ -4,14 +4,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
 
-Route::get('/ping', function () {
-    return response()->json(['message' => 'Laravel is connected!']);
-});
-
 require __DIR__ . '/api/auth.php';
 
+// Public: no token needed (user forgot their password)
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', fn (Request $request) => $request->user());
+    Route::get('/user', fn(Request $request) => $request->user());
 
     Route::post('/email/otp', [AuthController::class, 'sendOtp'])->middleware('throttle:3,1');
     Route::post('/email/otp/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
