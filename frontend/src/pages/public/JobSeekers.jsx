@@ -7,49 +7,29 @@ import { SectionHeading } from "../../components/ui/public/PublicUI";
 import { getPublicJobseekers } from "../../api/public";
 import { SERVICE_NAMES } from "../../lib/sampleJobseekers";
 
-// 1. Helper to get initials
 const initialsOf = (name) => {
   if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .substring(0, 2);
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
 };
 
-// 2. The Avatar Component
-const JobseekerAvatar = ({ name, photo }) => {
-  if (photo) {
-    return (
-      <img
-        src={photo}
-        alt={name}
-        className="h-16 w-16 rounded-full object-cover"
-      />
-    );
-  }
-  return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-xl font-bold text-orange-600">
-      {initialsOf(name)}
-    </div>
-  );
-};
-
-// 3. The Missing JobseekerCard Component
 const JobseekerCard = ({ person }) => {
   return (
     <div className="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
       <div>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <JobseekerAvatar name={person.name} photo={person.photo_path} />
+            {/* Uses the real photo_path from your database if it exists */}
+            {person.photo_path ? (
+              <img src={person.photo_path} alt={person.name} className="h-16 w-16 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-xl font-bold text-orange-600">
+                {initialsOf(person.name)}
+              </div>
+            )}
             <div>
               <h3 className="flex items-center gap-1 text-lg font-bold text-navy">
                 {person.name}
-                {person.is_verified && (
-                  <CheckBadgeIcon className="h-5 w-5 text-blue-500" />
-                )}
+                {person.is_verified && <CheckBadgeIcon className="h-5 w-5 text-blue-500" />}
               </h3>
               <p className="text-sm font-medium text-gray-500">
                 {person.service || "General Services"}
@@ -68,14 +48,11 @@ const JobseekerCard = ({ person }) => {
           <div className="flex items-center gap-1">
             <StarIcon className="h-4 w-4 text-yellow-400" />
             <span className="font-semibold text-navy">5.0</span>
-            <span className="text-gray-400">(0 reviews)</span>
           </div>
         </div>
 
         {person.bio && (
-          <p className="mt-3 line-clamp-2 text-sm text-gray-600">
-            {person.bio}
-          </p>
+          <p className="mt-3 line-clamp-2 text-sm text-gray-600">{person.bio}</p>
         )}
       </div>
 
@@ -83,8 +60,7 @@ const JobseekerCard = ({ person }) => {
         <div>
           <p className="text-xs text-gray-500">Starting at</p>
           <p className="text-lg font-bold text-navy">
-            ₱{person.rate || "500"}
-            <span className="text-sm font-normal text-gray-500">/hr</span>
+            ₱{person.rate || "500"}<span className="text-sm font-normal text-gray-500">/hr</span>
           </p>
         </div>
         <Link
@@ -98,7 +74,6 @@ const JobseekerCard = ({ person }) => {
   );
 };
 
-// 4. The Main Page Component
 export default function Jobseekers() {
   const [params, setParams] = useSearchParams();
   const service = params.get("service") || "All";
@@ -108,6 +83,7 @@ export default function Jobseekers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // FETCHES REAL DATA FROM NEON DB VIA RENDER
   useEffect(() => {
     let cancelled = false;
 
@@ -159,7 +135,6 @@ export default function Jobseekers() {
           subtitle="Filter by service or availability, compare rates and reliability, then send a request."
         />
 
-        {/* Service filters */}
         <div className="mt-8 flex flex-wrap gap-2.5">
           {["All", ...SERVICE_NAMES].map((name) => {
             const active = service === name;
@@ -169,11 +144,10 @@ export default function Jobseekers() {
                 type="button"
                 onClick={() => setService(name)}
                 aria-pressed={active}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  active
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${active
                     ? "border-navy bg-navy text-white"
                     : "border-gray-300 bg-white text-navy hover:border-navy"
-                }`}
+                  }`}
               >
                 {name}
               </button>
@@ -181,17 +155,15 @@ export default function Jobseekers() {
           })}
         </div>
 
-        {/* Availability filter and result count */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => setOnlyAvailable((v) => !v)}
             aria-pressed={onlyAvailable}
-            className={`inline-flex cursor-pointer items-center gap-2.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
-              onlyAvailable
+            className={`inline-flex cursor-pointer items-center gap-2.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${onlyAvailable
                 ? "border-green-600 bg-green-100 text-green-800"
                 : "border-gray-300 bg-white text-navy hover:border-navy"
-            }`}
+              }`}
           >
             <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
             Available now only
@@ -205,7 +177,6 @@ export default function Jobseekers() {
           )}
         </div>
 
-        {/* Results */}
         {loading ? (
           <p className="mt-8 text-sm text-gray-600">Loading jobseekers...</p>
         ) : error ? (
@@ -214,18 +185,15 @@ export default function Jobseekers() {
           </div>
         ) : results.length > 0 ? (
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {/* MAPS OVER THE REAL DATABASE DATA */}
             {results.map((person) => (
               <JobseekerCard key={person.id} person={person} />
             ))}
           </div>
         ) : (
           <div className="mt-8 rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
-            <p className="text-lg font-bold text-navy">
-              No jobseekers match these filters yet.
-            </p>
-            <p className="mt-1 text-sm text-gray-600">
-              Try another service or turn off &ldquo;Available now only&rdquo;.
-            </p>
+            <p className="text-lg font-bold text-navy">No jobseekers match these filters yet.</p>
+            <p className="mt-1 text-sm text-gray-600">Try another service or turn off "Available now only".</p>
             <button
               type="button"
               onClick={reset}
