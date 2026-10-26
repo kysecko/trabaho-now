@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOne; // <-- ADDED
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -40,17 +40,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(IdVerification::class);
     }
 
-    /**
-     * Get the jobseeker profile associated with the user.
-     */
+    // ADDED THESE TWO METHODS
     public function jobseekerProfile(): HasOne
     {
         return $this->hasOne(JobseekerProfile::class);
     }
 
-    /**
-     * Get the services associated with the user.
-     */
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);
