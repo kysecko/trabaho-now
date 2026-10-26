@@ -5,10 +5,100 @@ import { StarIcon } from "@heroicons/react/24/solid";
 import Container from "../../components/layout/Container";
 import { SectionHeading } from "../../components/ui/public/PublicUI";
 import { getPublicJobseekers } from "../../api/public";
-import { SERVICE_NAMES, STATUS_STYLES } from "../../lib/sampleJobseekers";
+import { SERVICE_NAMES } from "../../lib/sampleJobseekers";
 
-// ...initialsOf, JobseekerAvatar, JobseekerCard unchanged...
+// 1. Helper to get initials
+const initialsOf = (name) => {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
+};
 
+// 2. The Avatar Component
+const JobseekerAvatar = ({ name, photo }) => {
+  if (photo) {
+    return (
+      <img
+        src={photo}
+        alt={name}
+        className="h-16 w-16 rounded-full object-cover"
+      />
+    );
+  }
+  return (
+    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-xl font-bold text-orange-600">
+      {initialsOf(name)}
+    </div>
+  );
+};
+
+// 3. The Missing JobseekerCard Component
+const JobseekerCard = ({ person }) => {
+  return (
+    <div className="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+      <div>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <JobseekerAvatar name={person.name} photo={person.photo_path} />
+            <div>
+              <h3 className="flex items-center gap-1 text-lg font-bold text-navy">
+                {person.name}
+                {person.is_verified && (
+                  <CheckBadgeIcon className="h-5 w-5 text-blue-500" />
+                )}
+              </h3>
+              <p className="text-sm font-medium text-gray-500">
+                {person.service || "General Services"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-4 text-sm text-gray-600">
+          {person.barangay && (
+            <div className="flex items-center gap-1">
+              <MapPinIcon className="h-4 w-4 text-gray-400" />
+              <span>{person.barangay}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <StarIcon className="h-4 w-4 text-yellow-400" />
+            <span className="font-semibold text-navy">5.0</span>
+            <span className="text-gray-400">(0 reviews)</span>
+          </div>
+        </div>
+
+        {person.bio && (
+          <p className="mt-3 line-clamp-2 text-sm text-gray-600">
+            {person.bio}
+          </p>
+        )}
+      </div>
+
+      <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
+        <div>
+          <p className="text-xs text-gray-500">Starting at</p>
+          <p className="text-lg font-bold text-navy">
+            ₱{person.rate || "500"}
+            <span className="text-sm font-normal text-gray-500">/hr</span>
+          </p>
+        </div>
+        <Link
+          to={`/profile/${person.id}`}
+          className="rounded-lg bg-navy px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800"
+        >
+          View Profile
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+// 4. The Main Page Component
 export default function Jobseekers() {
   const [params, setParams] = useSearchParams();
   const service = params.get("service") || "All";
