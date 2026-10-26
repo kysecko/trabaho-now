@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne; // MAKE SURE THIS IS HERE
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -37,5 +38,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function idVerifications(): HasMany
     {
         return $this->hasMany(IdVerification::class);
+    }
+
+    // MAKE SURE THESE TWO ARE HERE
+    public function jobseekerProfile(): HasOne
+    {
+        return $this->hasOne(JobseekerProfile::class);
+    }
+
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
     }
 }
