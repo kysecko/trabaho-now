@@ -5,13 +5,16 @@ WORKDIR /app
 
 COPY --from=vendor /app /app
 
+USER root
+
 RUN mkdir -p /app/storage/logs \
     /app/storage/framework/cache \
     /app/storage/framework/sessions \
     /app/storage/framework/views \
     /app/bootstrap/cache \
+    && touch /app/storage/logs/laravel.log \
     && chown -R 1000:1000 /app/storage /app/bootstrap/cache \
-    && chmod -R ug+rwX /app/storage /app/bootstrap/cache
+    && chmod -R 775 /app/storage /app/bootstrap/cache
 
 ENV APP_ENV=production
 ENV APP_DEBUG=false
