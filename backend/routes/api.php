@@ -10,6 +10,14 @@ require __DIR__ . '/api/auth.php';
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
+Route::prefix('public')->group(function () {
+    require __DIR__ . '/api/public.php';
+});
+
+Route::prefix('public')->group(function () {
+    require __DIR__ . '/api/public.php';
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn(Request $request) => $request->user());
 
