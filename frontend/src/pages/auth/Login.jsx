@@ -57,12 +57,23 @@ export default function Login() {
           </div>
         )}
 
-        <Field label="Email" name="email" type="email" value={form.email} onChange={update} error={first("email")} required icon={<EnvelopeIcon className="w-4 h-4" />} />
+        <Field
+          label="Email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          value={form.email}
+          onChange={update}
+          error={first("email")}
+          required
+          icon={<EnvelopeIcon className="w-4 h-4" />}
+        />
 
         <Field
           label="Password"
           name="password"
           type={showPassword ? "text" : "password"}
+          autoComplete="current-password"
           value={form.password}
           onChange={update}
           error={first("password")}
@@ -74,7 +85,9 @@ export default function Login() {
               onClick={() => setShowPassword(!showPassword)}
               className="text-muted hover:text-navy"
             >
-              {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+              {showPassword
+                ? <EyeIcon className="w-5 h-5" />
+                : <EyeSlashIcon className="w-5 h-5" />}
             </button>
           }
         />

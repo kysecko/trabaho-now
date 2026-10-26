@@ -81,14 +81,21 @@ export default function Register() {
           label="Password"
           name="password"
           type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
           value={form.password}
           onChange={update}
           error={first("password")}
           required
           icon={<ShieldCheckIcon className="w-4 h-4" />}
           rightIcon={
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted hover:text-navy">
-              {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-muted hover:text-navy"
+            >
+              {showPassword
+                ? <EyeIcon className="w-5 h-5" />
+                : <EyeSlashIcon className="w-5 h-5" />}
             </button>
           }
         />
