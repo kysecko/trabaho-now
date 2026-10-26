@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Middleware\EnsureRole;
@@ -16,11 +17,19 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'verified.identity' => EnsureVerified::class,
-            'role'              => EnsureRole::class,
+            'role' => EnsureRole::class,
         ]);
+
+        // API requests should return JSON, not redirect to a missing login route.
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('api/*')
+                ? null
+                : config('app.frontend_url', 'http://localhost:5173').'/login'
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+            fn (Request $request) => $request->is('api/*')
+                || $request->expectsJson(),
         );
     })->create();
