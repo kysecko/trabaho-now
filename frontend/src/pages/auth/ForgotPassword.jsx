@@ -40,13 +40,13 @@ export default function ForgotPassword() {
           <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
             <EnvelopeIcon className="h-8 w-8 text-green-600" />
           </div>
-          
+
           <h3 className="text-xl font-bold text-navy">Check your email</h3>
-          
+
           <p className="text-gray-600">
             We sent an email to <strong className="text-navy">{sentTo}</strong> with instructions to reset your password.
           </p>
-          
+
           <p className="text-sm text-muted">
             The link expires in 60 minutes. Don't forget to check your spam folder if it doesn't arrive.
           </p>
@@ -60,7 +60,7 @@ export default function ForgotPassword() {
             <ArrowLeftIcon className="h-4 w-4" />
             Go back to login
           </Link>
-          
+
           <button
             type="button"
             onClick={() => setSentTo("")}
@@ -91,6 +91,7 @@ export default function ForgotPassword() {
           label="Email address"
           name="email"
           type="email"
+          autoComplete="email"
           value={form.email}
           onChange={update}
           error={first("email")}
