@@ -35,7 +35,7 @@ export default function UserManagement() {
   return (
     <div className="mx-auto w-full max-w-6xl">
       <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-      <p className="mt-1 text-sm text-gray-500">Manage all registered users on the platform.</p>
+      <p className="mt-1 text-sm text-gray-500">Manage accounts, review verification, and keep your marketplace safe.</p>
 
       {/* Filters Row */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
