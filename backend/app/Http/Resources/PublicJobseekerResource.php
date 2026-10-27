@@ -17,11 +17,11 @@ class PublicJobseekerResource extends JsonResource
             'name'                => $this->name,
             'service'             => $service?->name,
             'barangay'            => $profile?->barangay,
-            'availability_status' => $profile?->availability_status ?? 'unavailable', /
+            'availability_status' => $profile?->availability_status ?? 'unavailable',
             'rating'              => (float) ($profile?->rating ?? 0),
             'jobs'                => (int) ($profile?->jobs_completed ?? 0),
             'cancelRate'          => (float) ($profile?->cancel_rate ?? 0),
-            'rate'                => $service?->rate ?? null,  
+            'rate'                => $service?->rate ?? null,
         ];
     }
 }
