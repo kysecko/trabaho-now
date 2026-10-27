@@ -1,4 +1,3 @@
-
 FROM composer:2 AS vendor
 
 WORKDIR /app
@@ -24,6 +23,7 @@ COPY --from=vendor /app /app
 
 USER root
 
+# 1. Create necessary directories and set permissions
 RUN mkdir -p /app/storage/logs \
     /app/storage/framework/cache \
     /app/storage/framework/sessions \
@@ -32,6 +32,11 @@ RUN mkdir -p /app/storage/logs \
     && touch /app/storage/logs/laravel.log \
     && chown -R 1000:1000 /app/storage /app/bootstrap/cache \
     && chmod -R 775 /app/storage /app/bootstrap/cache
+
+# 2. Force Laravel to clear config cache during the build
+RUN php artisan config:clear \
+    && php artisan route:clear \
+    && php artisan view:clear
 
 ENV APP_ENV=production
 ENV APP_DEBUG=false
