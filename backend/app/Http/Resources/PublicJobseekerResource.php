@@ -9,20 +9,19 @@ class PublicJobseekerResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $profile = $this->jobseekerProfile;       // assumed relation
-        $service = $this->services->first();      // assumed relation
+        $profile = $this->jobseekerProfile;
+        $service = $this->services->first();
 
         return [
-            'id'         => $this->id,
-            'name'       => $this->name,
-            'image'      => $profile?->photo_url,                 // assumed column
-            'service'    => $service?->name,                      // assumed column
-            'barangay'   => $profile?->barangay,                  // assumed column
-            'status'     => ucfirst($profile?->availability_status ?? 'unavailable'), // "Available", etc.
-            'rating'     => (float) ($profile?->rating ?? 0),     // assumed column
-            'jobs'       => (int) ($profile?->jobs_completed ?? 0),   // assumed column
-            'cancelRate' => (float) ($profile?->cancel_rate ?? 0),    // assumed column
-            'rate'       => $service ? '₱' . number_format($service->rate) . '/hr' : null, // assumed column
+            'id'                  => $this->id,
+            'name'                => $this->name,
+            'service'             => $service?->name,
+            'barangay'            => $profile?->barangay,
+            'availability_status' => $profile?->availability_status ?? 'unavailable', /
+            'rating'              => (float) ($profile?->rating ?? 0),
+            'jobs'                => (int) ($profile?->jobs_completed ?? 0),
+            'cancelRate'          => (float) ($profile?->cancel_rate ?? 0),
+            'rate'                => $service?->rate ?? null,  
         ];
     }
 }
