@@ -15,6 +15,8 @@ class PublicJobseekerResource extends JsonResource
         return [
             'id'                  => $this->id,
             'name'                => $this->name,
+            'is_verified'         => (bool) $this->is_verified,     
+            'photo_path'          => $profile?->photo_path,         
             'service'             => $service?->name,
             'barangay'            => $profile?->barangay,
             'availability_status' => $profile?->availability_status ?? 'unavailable',
