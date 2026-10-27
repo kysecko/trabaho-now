@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckBadgeIcon, MapPinIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
-import Container from ".git branch -vv./../components/layout/Container";
+import Container from "../../components/layout/Container";
 import { SectionHeading } from "../../components/ui/public/PublicUI";
 import { getPublicJobseekers } from "../../api/public";
 import { SERVICE_NAMES } from "../../lib/sampleJobseekers";
