@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckBadgeIcon, MapPinIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { SentIcon } from "@hugeicons/core-free-icons";
+
 import Container from "../../components/layout/Container";
 import { SectionHeading } from "../../components/ui/public/PublicUI";
 import { getPublicJobseekers } from "../../api/public";
 import { SERVICE_NAMES } from "../../lib/sampleJobseekers";
-
-import { SentIcon } from "@hugeicons/core-free-icons";
 
 const initialsOf = (name) => {
   if (!name) return "?";

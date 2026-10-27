@@ -19,7 +19,7 @@ async function request(method, path, body, { blob = false } = {}) {
   const data = res.status === 204 ? null : await res.json().catch(() => null);
 
   if (!res.ok) {
-    const error = new Error(data?.message || "Request failed");
+    const error = new Error(data?.message || "Something went wrong. Please check your internet connection and try again.");
     error.status = res.status;
     error.errors = data?.errors; 
     error.code = data?.code;   
