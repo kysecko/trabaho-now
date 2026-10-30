@@ -10,7 +10,7 @@ import {
   AcademicCapIcon,
   TruckIcon,
   SunIcon,
-  ChevronRightIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import Container from "../../components/layout/Container";
 import { SectionHeading, PrimaryLink } from "../../components/ui/public/PublicUI";
@@ -55,7 +55,7 @@ export default function Services() {
                 </p>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
                   See jobseekers
-                  <ChevronRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                  <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </span>
               </Link>
             ))}

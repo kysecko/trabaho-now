@@ -15,7 +15,6 @@ export default function VerifyEmail() {
   const [cooldown, setCooldown] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  // If someone tries to go to /verify directly, kick them out
   if (!email) {
     return <Navigate to="/register" replace />;
   }
@@ -42,18 +41,31 @@ export default function VerifyEmail() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (code.length !== 6) return;
+    setSubmitting(true);
+    setErrors({});
 
-    setBusy(true);
-    setError("");
     try {
-      await verifyOtp(code);
-      navigate("/login", { replace: true, state: { verified: true } });
+      const response = await registerUser(form);
+      const token = response.token || response.data?.token;
+
+      if (token) {
+        localStorage.setItem("token", token);
+
+        navigate("/verify", {
+          state: {
+            email: response.user?.email || response.data?.user?.email,
+            tempToken: token 
+          }
+        });
+      } else {
+        setErrors({ form: ["Registration succeeded, but no token was returned."] });
+      }
+
     } catch (err) {
-      setError(err.message || "Invalid code.");
-      setCode("");
+      console.error("Registration Error:", err);
+      setErrors(err.errors || { form: [err.message || "An unexpected error occurred."] });
     } finally {
-      setBusy(false);
+      setSubmitting(false);
     }
   };
 
