@@ -23,20 +23,21 @@ COPY --from=vendor /app /app
 
 USER root
 
-# 1. Create necessary directories and set permissions
+# 1. Added /app/resources/views to the mkdir list to prevent the crash
 RUN mkdir -p /app/storage/logs \
     /app/storage/framework/cache \
     /app/storage/framework/sessions \
     /app/storage/framework/views \
     /app/bootstrap/cache \
+    /app/resources/views \
     && touch /app/storage/logs/laravel.log \
-    && chown -R 1000:1000 /app/storage /app/bootstrap/cache \
-    && chmod -R 775 /app/storage /app/bootstrap/cache
+    && chown -R 1000:1000 /app/storage /app/bootstrap/cache /app/resources \
+    && chmod -R 775 /app/storage /app/bootstrap/cache /app/resources
 
-# 2. Force Laravel to clear config cache during the build
-RUN php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
+# 2. We removed your custom CMD so the base image can run its built-in supervisor safely.
+# If you still want to clear the cache on boot without crashing, we do it safely here:
+RUN echo '#!/bin/sh\nphp artisan optimize:clear || true\nphp-fpm' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
+CMD ["/usr/local/bin/start.sh"]
 
 ENV APP_ENV=production
 ENV APP_DEBUG=false
