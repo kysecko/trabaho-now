@@ -2,7 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan; // Added this
 use App\Http\Controllers\Api\Auth\AuthController;
+
+try {
+    Artisan::call('migrate --force');
+} catch (\Exception $e) {
+}
 
 require __DIR__ . '/api/auth.php';
 
