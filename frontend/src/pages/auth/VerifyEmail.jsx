@@ -1,16 +1,19 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { sendOtp, verifyOtp } from "../../api/auth";
+import { sendOtp, verifyOtp, logoutUser } from "../../api/auth";
 
 export default function VerifyEmail() {
-  const navigate = useNavigate();
-  const { user, loading, refreshUser } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [busy, setBusy] = useState(false);
+
+  // Set to true once the OTP is accepted, so the redirect to /login
+  // carries the "verified" flag for the success message.
+  const justVerified = useRef(false);
 
   // ALL hooks first
   useEffect(() => {
@@ -21,8 +24,23 @@ export default function VerifyEmail() {
 
   // Early returns AFTER hooks
   if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.email_verified_at) return <Navigate to={`/${user.role}`} replace />;
+
+  // After a successful verify we log out locally, so user becomes null
+  // and this sends them to /login (never to the dashboard).
+  if (!user) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={justVerified.current ? { verified: true } : undefined}
+      />
+    );
+  }
+
+  // Already verified (e.g. opened /verify manually) -> dashboard
+  if (user.email_verified_at && !justVerified.current) {
+    return <Navigate to={`/${user.role}`} replace />;
+  }
 
   const email = user.email;
 
@@ -49,12 +67,16 @@ export default function VerifyEmail() {
     setError("");
     try {
       await verifyOtp(code);
-      const updated = await refreshUser();
-      navigate(`/${updated.role}`, { replace: true });
+
+      // Revoke the token on the server (ignore failures)
+      try { await logoutUser(); } catch {}
+
+      // Clear local auth state -> triggers the <Navigate to="/login"> above
+      justVerified.current = true;
+      logout();
     } catch (err) {
       setError(err.message || "Invalid code.");
       setCode("");
-    } finally {
       setBusy(false);
     }
   };
