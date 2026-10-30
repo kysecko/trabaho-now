@@ -6,14 +6,10 @@ use App\Http\Controllers\Api\Auth\AuthController;
 
 require __DIR__ . '/api/auth.php';
 
-// Public: no token needed (user forgot their password)
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
-Route::prefix('public')->group(function () {
-    require __DIR__ . '/api/public.php';
-});
-
+// Only ONE public group!
 Route::prefix('public')->group(function () {
     require __DIR__ . '/api/public.php';
 });
