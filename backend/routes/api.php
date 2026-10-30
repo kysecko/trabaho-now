@@ -2,22 +2,14 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\Api\Auth\AuthController;
-
-// TEMPORARY CACHE CLEAR
-try {
-    Artisan::call('optimize:clear');
-} catch (\Exception $e) {
-}
 
 require __DIR__ . '/api/auth.php';
 
-// Public: no token needed (user forgot their password)
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
-// Load public routes ONCE (I removed the duplicate block here)
+// Only ONE public group!
 Route::prefix('public')->group(function () {
     require __DIR__ . '/api/public.php';
 });
