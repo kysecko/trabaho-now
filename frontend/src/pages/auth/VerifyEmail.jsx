@@ -6,7 +6,7 @@ import { sendOtp, verifyOtp } from "../../api/auth";
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth(); 
+  const { login, refreshUser } = useAuth(); // ADDED: refreshUser from context
   const { email } = location.state || {};
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -47,6 +47,10 @@ export default function VerifyEmail() {
     setError("");
     try {
       await verifyOtp(code);
+      
+      // FIXED: Refresh the user state in AuthContext so frontend knows they are verified
+      await refreshUser(); 
+
       navigate("/login", { replace: true, state: { verified: true } });
     } catch (err) {
       setError(err.message || "Invalid code.");
