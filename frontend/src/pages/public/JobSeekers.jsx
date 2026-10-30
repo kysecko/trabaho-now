@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckBadgeIcon, MapPinIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { SentIcon } from "@hugeicons/core-free-icons";
-
+import { useQuery } from "@tanstack/react-query";
 import Container from "../../components/layout/Container";
 import { SectionHeading } from "../../components/ui/public/PublicUI";
 import { getPublicJobseekers } from "../../api/public";
@@ -107,38 +105,21 @@ const JobseekerCard = ({ person }) => {
   );
 };
 
-// ORIGINAL MAIN COMPONENT 
-
 export default function Jobseekers() {
   const [params, setParams] = useSearchParams();
   const service = params.get("service") || "All";
   const [onlyAvailable, setOnlyAvailable] = useState(false);
 
-  const [jobseekers, setJobseekers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // FETCHES REAL DATA FROM DATABASE
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const res = await getPublicJobseekers();
-        if (!cancelled) {
-          setJobseekers(Array.isArray(res) ? res : res.data || []);
-        }
-      } catch (err) {
-        if (!cancelled) setError(err.message || "Could not load jobseekers.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // TanStack Query handles fetching, caching, and loading states
+  const { data: jobseekers = [], isLoading, isError, error } = useQuery({
+    queryKey: ['publicJobseekers'],
+    queryFn: async () => {
+      const res = await getPublicJobseekers();
+      // Handle Laravel pagination safely
+      return Array.isArray(res) ? res : res.data || [];
+    },
+    staleTime: 1000 * 60 * 5, // Keep cached for 5 minutes (switching tabs won't refresh)
+  });
 
   const setService = (name) => {
     if (name === "All") setParams({});
@@ -206,8 +187,8 @@ export default function Jobseekers() {
             Available now only
           </button>
 
-          {!loading && !error && (
-            <p className="text-sm font-bold text-gray-500" aria-live="polite">
+          {!isLoading && !isError && (
+            <p className="text-sm font-medium text-gray-600" aria-live="polite">
               {results.length} {results.length === 1 ? "jobseeker" : "jobseekers"}
               {service !== "All" && ` in ${service}`}
             </p>
@@ -215,11 +196,11 @@ export default function Jobseekers() {
         </div>
 
         {/* Results */}
-        {loading ? (
+        {isLoading ? (
           <p className="mt-8 text-sm text-gray-600">Loading jobseekers...</p>
-        ) : error ? (
+        ) : isError ? (
           <div className="mt-8 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
+            {error?.message || "Could not load jobseekers."}
           </div>
         ) : results.length > 0 ? (
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
