@@ -74,6 +74,13 @@ class AuthController extends Controller
             return response()->json(['message' => 'Already verified.']);
         }
 
+        // Protect the relay's daily email quota
+        $dailyKey = "otp_daily:{$user->id}";
+        if (Cache::get($dailyKey, 0) >= 10) {
+            return response()->json(['message' => 'Too many codes requested today. Try again tomorrow.'], 429);
+        }
+        Cache::put($dailyKey, Cache::get($dailyKey, 0) + 1, now()->endOfDay());
+
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         Cache::put("otp:{$user->id}", Hash::make($code), now()->addMinutes(10));
@@ -85,7 +92,7 @@ class AuthController extends Controller
                 $user->name,
                 'Your TrabahoNow verification code',
                 "<p>Your code is <b style='font-size:22px'>{$code}</b>.</p>"
-                    . "<p>It expires in 10 minutes. If you didn't sign up, ignore this email.</p>",
+                . "<p>It expires in 10 minutes. If you didn't sign up, ignore this email.</p>",
                 "Your TrabahoNow verification code is {$code}. It expires in 10 minutes. If you didn't sign up, ignore this email."
             );
         } catch (\Throwable $e) {
@@ -151,8 +158,8 @@ class AuthController extends Controller
                         $user->name,
                         'Reset your TrabahoNow password',
                         "<p>We received a request to reset your password.</p>"
-                            . "<p><a href=\"{$safeUrl}\">Reset password</a></p>"
-                            . "<p>This link expires in 60 minutes. If you didn't ask for this, ignore this email.</p>",
+                        . "<p><a href=\"{$safeUrl}\">Reset password</a></p>"
+                        . "<p>This link expires in 60 minutes. If you didn't ask for this, ignore this email.</p>",
                         "Reset your TrabahoNow password: {$url}\nThis link expires in 60 minutes. If you didn't ask for this, ignore this email."
                     );
                 }
@@ -194,26 +201,25 @@ class AuthController extends Controller
     }
 
     /**
-     * Send a transactional email through Brevo's HTTPS API.
+     * Send an email through the Google Apps Script relay (HTTPS, sent from your Gmail).
      * Throws on any failure so callers can log and respond.
      */
     private function sendMail(string $toEmail, ?string $toName, string $subject, string $html, string $text): void
     {
-        Http::withHeaders([
-            'api-key' => config('services.brevo.key'),
-            'accept'  => 'application/json',
-        ])
-            ->timeout(15)
-            ->post('https://api.brevo.com/v3/smtp/email', [
-                'sender'      => [
-                    'name'  => config('mail.from.name'),
-                    'email' => config('mail.from.address'),
-                ],
-                'to'          => [['email' => $toEmail, 'name' => $toName ?: $toEmail]],
-                'subject'     => $subject,
-                'htmlContent' => $html,
-                'textContent' => $text,
-            ])
-            ->throw();
+        $res = Http::timeout(20)
+            ->asJson()
+            ->post(config('services.mail_relay.url'), [
+                'secret'  => config('services.mail_relay.secret'),
+                'to'      => $toEmail,
+                'subject' => $subject,
+                'html'    => $html,
+                'text'    => $text,
+            ]);
+
+        $res->throw();
+
+        if (! $res->json('ok')) {
+            throw new \RuntimeException('Mail relay rejected: ' . $res->body());
+        }
     }
 }
