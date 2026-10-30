@@ -1,8 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
-// Wrap every protected dashboard route with this.
-// <Route element={<RequireVerified />}> ...dashboard routes... </Route>
 export default function RequireVerified({ role }) {
   const { user, loading } = useAuth();
   const location = useLocation();
