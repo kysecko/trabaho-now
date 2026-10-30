@@ -1,142 +1,142 @@
-import { useEffect, useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // ADDED useNavigate
+import { registerUser } from "../../api/auth";
 import { useAuth } from "../../context/AuthContext";
-import { sendOtp, verifyOtp, logoutUser } from "../../api/auth";
+import Field from "../../components/ui/Field";
+import { UserIcon, ShieldCheckIcon, EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
-export default function VerifyEmail() {
-  const { user, loading, logout } = useAuth();
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  const [sent, setSent] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-  const [busy, setBusy] = useState(false);
+export default function Register() {
+  const { login } = useAuth(); // Removed 'user' since we navigate manually
+  const location = useLocation();
+  const navigate = useNavigate(); // ADDED useNavigate
+  const from = location.state?.from;
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  // Set to true once the OTP is accepted, so the redirect to /login
-  // carries the "verified" flag for the success message.
-  const justVerified = useRef(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+    role: "client",
+  });
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
-  // ALL hooks first
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
+  // REMOVED the <Navigate> blocks that were here
 
-  // Early returns AFTER hooks
-  if (loading) return null;
+  const first = (key) => errors[key]?.[0];
+  const update = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  // After a successful verify we log out locally, so user becomes null
-  // and this sends them to /login (never to the dashboard).
-  if (!user) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={justVerified.current ? { verified: true } : undefined}
-      />
-    );
-  }
-
-  // Already verified (e.g. opened /verify manually) -> dashboard
-  if (user.email_verified_at && !justVerified.current) {
-    return <Navigate to={`/${user.role}`} replace />;
-  }
-
-  const email = user.email;
-
-  const handleSendCode = async () => {
-    setError("");
-    setBusy(true);
-    try {
-      await sendOtp();
-      setSent(true);
-      setCooldown(60);
-    } catch (err) {
-      setSent(false);
-      setError(err.message || "Failed to send code.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  console.log("VerifyEmail v2: logout flow");
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (code.length !== 6) return;
+    setSubmitting(true);
+    setErrors({});
 
-    setBusy(true);
-    setError("");
     try {
-      await verifyOtp(code);
+      const response = await registerUser(form);
+      const token = response.token || response.data?.token;
+      const userData = response.user || response.data?.user;
 
-      // Revoke the token on the server (ignore failures)
-      try { await logoutUser(); } catch {}
-
-      // Clear local auth state -> triggers the <Navigate to="/login"> above
-      justVerified.current = true;
-      logout();
+      if (token) {
+        // login() stores the token and sets the user state
+        login(token, userData);
+        
+        // 🔥 IMMEDIATELY navigate to verify, bypassing any redirect logic
+        navigate("/verify", { replace: true, state: { email: userData.email } });
+      } else {
+        setErrors({ form: ["Registration succeeded, but no token was returned."] });
+      }
     } catch (err) {
-      setError(err.message || "Invalid code.");
-      setCode("");
-      setBusy(false);
+      console.error("Registration Error:", err);
+      setErrors(err.errors || { form: [err.message || "An unexpected error occurred."] });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="w-full text-center">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-navy sm:text-3xl">Verify your email</h1>
-        <p className="mt-2 text-sm text-muted">
-          We'll send a 6-digit code to <span className="font-semibold">{email}</span>.
+    <div className="w-full">
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-bold text-navy sm:text-3xl">Create your account.</h1>
+        <p id="signup-subtitle" className="mt-2 text-sm text-muted">
+          Fill up the form to choose how you'd like to get started — find work or offer your services.
         </p>
       </div>
 
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-danger">
-          {error}
-        </div>
-      )}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {first("form") && (
+          <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-danger">
+            {first("form")}
+          </div>
+        )}
 
-      {!sent ? (
-        <button
-          onClick={handleSendCode}
-          disabled={busy}
-          className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60"
-        >
-          {busy ? "Sending..." : "Send verification code"}
-        </button>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            placeholder="000000"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-center text-2xl tracking-[0.5em] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+        <Field label="Full name" name="name" value={form.name} onChange={update} error={first("name")} required icon={<UserIcon className="w-4 h-4" />} />
 
-          <button
-            type="submit"
-            disabled={busy || code.length !== 6}
-            className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60"
-          >
-            {busy ? "Verifying..." : "Verify & Continue"}
-          </button>
+        <Field label="Email" name="email" type="email" value={form.email} onChange={update} error={first("email")} required icon={<EnvelopeIcon className="w-4 h-4" />} />
 
-          <div className="text-sm">
+        <Field
+          label="Password"
+          name="password"
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          value={form.password}
+          onChange={update}
+          error={first("password")}
+          required
+          icon={<ShieldCheckIcon className="w-4 h-4" />}
+          rightIcon={
             <button
               type="button"
-              disabled={cooldown > 0 || busy}
-              onClick={handleSendCode}
-              className="font-semibold text-primary hover:underline disabled:text-gray-400 disabled:no-underline"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-muted hover:text-navy"
             >
-              {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
+              {showPassword
+                ? <EyeIcon className="w-5 h-5" />
+                : <EyeSlashIcon className="w-5 h-5" />}
             </button>
-          </div>
-        </form>
-      )}
+          }
+        />
+
+        <Field
+          label="Confirm password"
+          name="password_confirmation"
+          type={showConfirm ? "text" : "password"}
+          value={form.password_confirmation}
+          onChange={update}
+          error={first("password_confirmation")}
+          required
+          icon={<ShieldCheckIcon className="w-4 h-4" />}
+          rightIcon={
+            <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-muted hover:text-navy">
+              {showConfirm ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+            </button>
+          }
+        />
+        <p className="text-center text-xs text-muted">
+          By creating an account, you agree to our{" "} <Link to="/terms" className="font-semibold text-primary hover:underline">Terms Condition</Link> and {" "}
+          <Link to="/privacy" className="font-semibold text-primary hover:underline">
+            Privacy Policy {" "}
+          </Link>
+          of TrabahoNow.
+        </p>
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60"
+        >
+          {submitting ? "Creating account..." : "Create account"}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted">
+        Already have an account?{" "}
+        <Link to="/login" state={{ from }} className="font-semibold text-primary hover:underline">
+          Log in here.
+        </Link>
+      </p>
     </div>
   );
 }
