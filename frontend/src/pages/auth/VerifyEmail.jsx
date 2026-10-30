@@ -1,28 +1,30 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { sendOtp, verifyOtp } from "../../api/auth";
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login, refreshUser } = useAuth(); // ADDED: refreshUser from context
-  const { email } = location.state || {};
+  const { user, loading, refreshUser } = useAuth();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  if (!email) {
-    return <Navigate to="/register" replace />;
-  }
-
+  // ALL hooks first
   useEffect(() => {
     if (cooldown <= 0) return;
-    const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+    const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [cooldown]);
+
+  // Early returns AFTER hooks
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.email_verified_at) return <Navigate to={`/${user.role}`} replace />;
+
+  const email = user.email;
 
   const handleSendCode = async () => {
     setError("");
@@ -32,13 +34,13 @@ export default function VerifyEmail() {
       setSent(true);
       setCooldown(60);
     } catch (err) {
+      setSent(false);
       setError(err.message || "Failed to send code.");
     } finally {
       setBusy(false);
     }
   };
 
-  // THIS IS THE CORRECTED FUNCTION
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (code.length !== 6) return;
@@ -47,11 +49,8 @@ export default function VerifyEmail() {
     setError("");
     try {
       await verifyOtp(code);
-      
-      // FIXED: Refresh the user state in AuthContext so frontend knows they are verified
-      await refreshUser(); 
-
-      navigate("/login", { replace: true, state: { verified: true } });
+      const updated = await refreshUser();
+      navigate(`/${updated.role}`, { replace: true });
     } catch (err) {
       setError(err.message || "Invalid code.");
       setCode("");

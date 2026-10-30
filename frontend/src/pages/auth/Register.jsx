@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { registerUser } from "../../api/auth";
 import { useAuth } from "../../context/AuthContext";
 import Field from "../../components/ui/Field";
 import { UserIcon, ShieldCheckIcon, EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 export default function Register() {
-  const { user, login } = useAuth(); // ADDED: login from context
+  const { user, login } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const from = location.state?.from;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -23,12 +22,12 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // FIXED: If logged in and verified, redirect. If logged in but NOT verified, force verify.
+  // Single source of redirects: once login() sets the user, these fire.
   if (user && user.email_verified_at) {
     return <Navigate to={from || `/${user.role}`} replace />;
   }
   if (user && !user.email_verified_at) {
-    return <Navigate to="/verify" state={{ email: user.email }} replace />;
+    return <Navigate to="/verify" replace />;
   }
 
   const first = (key) => errors[key]?.[0];
@@ -42,25 +41,14 @@ export default function Register() {
     try {
       const response = await registerUser(form);
       const token = response.token || response.data?.token;
-      const userData = response.user || response.data?.user; // FIXED: extract user data
+      const userData = response.user || response.data?.user;
 
       if (token) {
-        // Save token to localStorage for api.js
-        localStorage.setItem("token", token);
-        
-        // FIXED: Update AuthContext state immediately
+        // login() stores the token and sets the user; the <Navigate> above handles redirect.
         login(token, userData);
-
-        navigate("/verify", {
-          state: {
-            email: userData?.email,
-            tempToken: token
-          }
-        });
       } else {
         setErrors({ form: ["Registration succeeded, but no token was returned."] });
       }
-
     } catch (err) {
       console.error("Registration Error:", err);
       setErrors(err.errors || { form: [err.message || "An unexpected error occurred."] });
@@ -100,14 +88,8 @@ export default function Register() {
           required
           icon={<ShieldCheckIcon className="w-4 h-4" />}
           rightIcon={
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="text-muted hover:text-navy"
-            >
-              {showPassword
-                ? <EyeIcon className="w-5 h-5" />
-                : <EyeSlashIcon className="w-5 h-5" />}
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted hover:text-navy">
+              {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
             </button>
           }
         />
@@ -127,11 +109,11 @@ export default function Register() {
             </button>
           }
         />
+
         <p className="text-center text-xs text-muted">
-          By creating an account, you agree to our{" "} <Link to="/terms" className="font-semibold text-primary hover:underline">Terms Condition</Link> and {" "}
-          <Link to="/privacy" className="font-semibold text-primary hover:underline">
-            Privacy Policy {" "}
-          </Link>
+          By creating an account, you agree to our{" "}
+          <Link to="/terms" className="font-semibold text-primary hover:underline">Terms Condition</Link> and{" "}
+          <Link to="/privacy" className="font-semibold text-primary hover:underline">Privacy Policy</Link>{" "}
           of TrabahoNow.
         </p>
 
