@@ -5,12 +5,11 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Enums\UserRole;
 use App\Models\User;
-use App\Mail\OtpMail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -81,7 +80,14 @@ class AuthController extends Controller
         Cache::forget("otp_attempts:{$user->id}");
 
         try {
-            Mail::to($user->email)->send(new OtpMail($code));
+            $this->sendMail(
+                $user->email,
+                $user->name,
+                'Your TrabahoNow verification code',
+                "<p>Your code is <b style='font-size:22px'>{$code}</b>.</p>"
+                . "<p>It expires in 10 minutes. If you didn't sign up, ignore this email.</p>",
+                "Your TrabahoNow verification code is {$code}. It expires in 10 minutes. If you didn't sign up, ignore this email."
+            );
         } catch (\Throwable $e) {
             Log::error('OTP mail failed', [
                 'user_id' => $user->id,
@@ -130,11 +136,35 @@ class AuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        Password::sendResetLink($request->only('email'));
+        // Passing a closure replaces Laravel's default notification, so the
+        // reset email goes out over Brevo's HTTPS API instead of blocked SMTP.
+        try {
+            Password::sendResetLink(
+                $request->only('email'),
+                function ($user, $token) {
+                    $url = rtrim(config('app.frontend_url'), '/')
+                        . '/reset-password?token=' . urlencode($token)
+                        . '&email=' . urlencode($user->email);
+                    $safeUrl = htmlspecialchars($url, ENT_QUOTES);
 
+                    $this->sendMail(
+                        $user->email,
+                        $user->name,
+                        'Reset your TrabahoNow password',
+                        "<p>We received a request to reset your password.</p>"
+                        . "<p><a href=\"{$safeUrl}\">Reset password</a></p>"
+                        . "<p>This link expires in 60 minutes. If you didn't ask for this, ignore this email.</p>",
+                        "Reset your TrabahoNow password: {$url}\nThis link expires in 60 minutes. If you didn't ask for this, ignore this email."
+                    );
+                }
+            );
+        } catch (\Throwable $e) {
+            Log::error('Reset mail failed', ['error' => $e->getMessage()]);
+        }
+
+        // Same response whether or not the email exists or the send worked.
         return response()->json([
-            'message' => 'We’ve sent a password reset link to your email.
-Please check your inbox and follow the link to reset your password.',
+            'message' => 'If that email is registered, we’ve sent a password reset link. Please check your inbox.',
         ]);
     }
 
@@ -162,5 +192,29 @@ Please check your inbox and follow the link to reset your password.',
         }
 
         return response()->json(['message' => 'Password updated. You can now log in.']);
+    }
+
+    /**
+     * Send a transactional email through Brevo's HTTPS API.
+     * Throws on any failure so callers can log and respond.
+     */
+    private function sendMail(string $toEmail, ?string $toName, string $subject, string $html, string $text): void
+    {
+        Http::withHeaders([
+                'api-key' => config('services.brevo.key'),
+                'accept'  => 'application/json',
+            ])
+            ->timeout(15)
+            ->post('https://api.brevo.com/v3/smtp/email', [
+                'sender'      => [
+                    'name'  => config('mail.from.name'),
+                    'email' => config('mail.from.address'),
+                ],
+                'to'          => [['email' => $toEmail, 'name' => $toName ?: $toEmail]],
+                'subject'     => $subject,
+                'htmlContent' => $html,
+                'textContent' => $text,
+            ])
+            ->throw();
     }
 }
