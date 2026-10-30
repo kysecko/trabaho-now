@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-// ADDED THIS IMPORT LINE:
 import { sendOtp, verifyOtp } from "../../api/auth";
 
 export default function VerifyEmail() {
@@ -39,33 +38,21 @@ export default function VerifyEmail() {
     }
   };
 
+  // THIS IS THE CORRECTED FUNCTION
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
-    setErrors({});
+    if (code.length !== 6) return;
 
+    setBusy(true);
+    setError("");
     try {
-      const response = await registerUser(form);
-      const token = response.token || response.data?.token;
-
-      if (token) {
-        localStorage.setItem("token", token);
-
-        navigate("/verify", {
-          state: {
-            email: response.user?.email || response.data?.user?.email,
-            tempToken: token 
-          }
-        });
-      } else {
-        setErrors({ form: ["Registration succeeded, but no token was returned."] });
-      }
-
+      await verifyOtp(code);
+      navigate("/login", { replace: true, state: { verified: true } });
     } catch (err) {
-      console.error("Registration Error:", err);
-      setErrors(err.errors || { form: [err.message || "An unexpected error occurred."] });
+      setError(err.message || "Invalid code.");
+      setCode("");
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
