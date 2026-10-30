@@ -5,54 +5,31 @@ import { useAuth } from "../../context/AuthContext";
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
-
-  // Get the data passed from the Register page
-  const { email, tempToken } = location.state || {};
-
+  const { login } = useAuth(); 
+  const { email } = location.state || {};
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  // If someone tries to go to /verify directly without signing up, kick them out
-  if (!tempToken || !email) {
+  // If someone tries to go to /verify directly, kick them out
+  if (!email) {
     return <Navigate to="/register" replace />;
   }
 
-  // Handle resend cooldown timer
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
     return () => clearTimeout(timer);
   }, [cooldown]);
 
-  // Helper to make API calls using the TEMPORARY token
-  const fetchWithToken = async (endpoint, method = "POST", body = null) => {
-    const options = {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": `Bearer ${tempToken}`,
-      },
-    };
-    if (body) options.body = JSON.stringify(body);
-
-    // Using your actual API URL from .env
-    const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, options);
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.message || "Request failed");
-    return data;
-  };
-
   const handleSendCode = async () => {
     setError("");
     setBusy(true);
     try {
-      await fetchWithToken("/email/otp");
+      // Use the API client (it automatically sends the Bearer token from localStorage)
+      await sendOtp();
       setSent(true);
       setCooldown(60);
     } catch (err) {
@@ -69,7 +46,7 @@ export default function VerifyEmail() {
     setBusy(true);
     setError("");
     try {
-      await fetchWithToken("/email/otp/verify", "POST", { code });
+      await verifyOtp(code);
       navigate("/login", { replace: true, state: { verified: true } });
     } catch (err) {
       setError(err.message || "Invalid code.");
