@@ -18,6 +18,11 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    'mail_relay' => [
+        'url'    => env('MAIL_RELAY_URL'),
+        'secret' => env('MAIL_RELAY_SECRET'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
