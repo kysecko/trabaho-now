@@ -21,19 +21,25 @@ WORKDIR /app
 
 COPY --from=vendor /app /app
 
-# Create necessary directories for views and cache
+# 1. Switch to root to create directories and change ownership
+USER root
+
 RUN mkdir -p /app/storage/logs \
     /app/storage/framework/cache \
     /app/storage/framework/sessions \
     /app/storage/framework/views \
     /app/bootstrap/cache \
-    /app/resources/views
+    /app/resources/views \
+    && touch /app/storage/logs/laravel.log
 
-# Disable NPM build step (API only)
-ENV NPM_BUILD=false
-
-# Set correct permissions for www-data user
+# 2. Give ownership to the www-data user (the web server user)
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/resources
 
-# Use the default start script from the base image (it handles everything correctly)
-# No need for custom start.sh
+# 3. Disable the NPM build step to fix the package.json crash
+ENV NPM_BUILD=false
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV LOG_CHANNEL=stderr
+
+# 4. Switch back to the www-data user for security
+USER www-data
