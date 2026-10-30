@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { CheckBadgeIcon, MapPinIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { CheckBadgeIcon, MapPinIcon, ShieldCheckIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import { useQuery } from "@tanstack/react-query";
 import Container from "../../components/layout/Container";
@@ -92,13 +92,10 @@ const JobseekerCard = ({ person }) => {
         </div>
         <Link
           to={`/profile/${person.id}`}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#ff4d00] px-5 py-2 text-sm font-bold textcd-white transition hover:bg-orange-600/90"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#ff4d00] px-5 py-2 text-sm font-bold text-white transition hover:bg-orange-600/90"
         >
           Hire Now
-          <HugeiconsIcon
-        icon={SentIcon}
-        className="size-6 text-blue-600"
-      />
+          <ArrowRightIcon className="h-4 w-4" />
         </Link>
       </div>
     </div>
