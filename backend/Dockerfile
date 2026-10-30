@@ -21,9 +21,10 @@ WORKDIR /app
 
 COPY --from=vendor /app /app
 
-# 1. Switch to root to create directories and change ownership
+# 1. Switch to root to fix all permissions
 USER root
 
+# 2. Ensure necessary directories exist and are writable
 RUN mkdir -p /app/storage/logs \
     /app/storage/framework/cache \
     /app/storage/framework/sessions \
@@ -32,14 +33,18 @@ RUN mkdir -p /app/storage/logs \
     /app/resources/views \
     && touch /app/storage/logs/laravel.log
 
-# 2. Give ownership to the www-data user (the web server user)
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/resources
+# 3. THE FIX: Give ownership of the ENTIRE app folder to www-data
+RUN chown -R www-data:www-data /app
 
-# 3. Disable the NPM build step to fix the package.json crash
+# 4. Disable NPM build to fix the package.json error
 ENV NPM_BUILD=false
+
+# 5. Set production environment variables
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 ENV LOG_CHANNEL=stderr
 
-# 4. Switch back to the www-data user for security
-USER www-data
+# 6. Do NOT switch to www-data manually. 
+# The entrypoint script of the base image handles user switching.
+# By leaving this as root, the entrypoint will correctly drop privileges 
+# and ensure the Nginx/SSL setup works without permission errors.
