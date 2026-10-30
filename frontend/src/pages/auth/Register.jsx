@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // ADDED useNavigate
 import { registerUser } from "../../api/auth";
 import { useAuth } from "../../context/AuthContext";
 import Field from "../../components/ui/Field";
 import { UserIcon, ShieldCheckIcon, EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 export default function Register() {
-  const { user, login } = useAuth();
+  const { login } = useAuth(); // Removed 'user' since we navigate manually
   const location = useLocation();
+  const navigate = useNavigate(); // ADDED useNavigate
   const from = location.state?.from;
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -22,13 +24,7 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Single source of redirects: once login() sets the user, these fire.
-  if (user && user.email_verified_at) {
-    return <Navigate to={from || `/${user.role}`} replace />;
-  }
-  if (user && !user.email_verified_at) {
-    return <Navigate to="/verify" replace />;
-  }
+  // REMOVED the <Navigate> blocks that were here
 
   const first = (key) => errors[key]?.[0];
   const update = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -44,8 +40,11 @@ export default function Register() {
       const userData = response.user || response.data?.user;
 
       if (token) {
-        // login() stores the token and sets the user; the <Navigate> above handles redirect.
+        // login() stores the token and sets the user state
         login(token, userData);
+        
+        // 🔥 IMMEDIATELY navigate to verify, bypassing any redirect logic
+        navigate("/verify", { replace: true, state: { email: userData.email } });
       } else {
         setErrors({ form: ["Registration succeeded, but no token was returned."] });
       }
@@ -88,8 +87,14 @@ export default function Register() {
           required
           icon={<ShieldCheckIcon className="w-4 h-4" />}
           rightIcon={
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted hover:text-navy">
-              {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-muted hover:text-navy"
+            >
+              {showPassword
+                ? <EyeIcon className="w-5 h-5" />
+                : <EyeSlashIcon className="w-5 h-5" />}
             </button>
           }
         />
@@ -109,11 +114,11 @@ export default function Register() {
             </button>
           }
         />
-
         <p className="text-center text-xs text-muted">
-          By creating an account, you agree to our{" "}
-          <Link to="/terms" className="font-semibold text-primary hover:underline">Terms Condition</Link> and{" "}
-          <Link to="/privacy" className="font-semibold text-primary hover:underline">Privacy Policy</Link>{" "}
+          By creating an account, you agree to our{" "} <Link to="/terms" className="font-semibold text-primary hover:underline">Terms Condition</Link> and {" "}
+          <Link to="/privacy" className="font-semibold text-primary hover:underline">
+            Privacy Policy {" "}
+          </Link>
           of TrabahoNow.
         </p>
 
