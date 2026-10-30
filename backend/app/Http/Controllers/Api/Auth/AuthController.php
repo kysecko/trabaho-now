@@ -9,6 +9,7 @@ use App\Mail\OtpMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -18,7 +19,6 @@ use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
-    // register
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -30,8 +30,6 @@ class AuthController extends Controller
 
         $user = User::create($data);
 
-        // NO EMAIL LINK SENT HERE
-
         $token = $user->createToken('web')->plainTextToken;
 
         return response()->json([
@@ -41,7 +39,6 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // login
     public function login(Request $request)
     {
         $data = $request->validate([
@@ -63,7 +60,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // logout
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -71,7 +67,6 @@ class AuthController extends Controller
         return response()->noContent();
     }
 
-    // gmail otp sender
     public function sendOtp(Request $request)
     {
         $user = $request->user();
@@ -85,13 +80,23 @@ class AuthController extends Controller
         Cache::put("otp:{$user->id}", Hash::make($code), now()->addMinutes(10));
         Cache::forget("otp_attempts:{$user->id}");
 
-        // send email
-        Mail::to($user->email)->send(new OtpMail($code));
+        try {
+            Mail::to($user->email)->send(new OtpMail($code));
+        } catch (\Throwable $e) {
+            Log::error('OTP mail failed', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+            Cache::forget("otp:{$user->id}");
+
+            return response()->json([
+                'message' => 'We could not send the code right now. Please try again.',
+            ], 503);
+        }
 
         return response()->json(['message' => 'Verification code sent.']);
     }
 
-    // verification
     public function verifyOtp(Request $request)
     {
         $request->validate(['code' => 'required|digits:6']);
@@ -121,7 +126,6 @@ class AuthController extends Controller
         return response()->json(['user' => $user->fresh()]);
     }
 
-    // forgot password reset
     public function forgotPassword(Request $request)
     {
         $request->validate(['email' => 'required|email']);
@@ -134,7 +138,6 @@ Please check your inbox and follow the link to reset your password.',
         ]);
     }
 
-    // reset and creating new
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -149,7 +152,7 @@ Please check your inbox and follow the link to reset your password.',
                 $user->forceFill(['password' => Hash::make($password)])
                     ->setRememberToken(Str::random(60));
                 $user->save();
-                $user->tokens()->delete(); // log out all other devices
+                $user->tokens()->delete();
                 event(new PasswordReset($user));
             }
         );

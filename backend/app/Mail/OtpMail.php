@@ -2,21 +2,25 @@
 
 namespace App\Mail;
 
-use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 
 class OtpMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public function __construct(public string $code) {}
 
-    public function build()
+    public function envelope(): Envelope
     {
-        // This sends ONLY the code. No link!
-        return $this->subject('Your TrabahoNow verification code')
-            ->html("<p>Your code is <b style='font-size:22px'>{$this->code}</b>.</p>
-                    <p>It expires in 10 minutes. If you didn't sign up, ignore this email.</p>");
+        return new Envelope(subject: 'Your TrabahoNow verification code');
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            htmlString: "<p>Your code is <b style='font-size:22px'>{$this->code}</b>.</p>
+                <p>It expires in 10 minutes. If you didn't sign up, ignore this email.</p>",
+            text: 'emails.otp-text',
+        );
     }
 }
