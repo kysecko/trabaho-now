@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+// ADDED THIS IMPORT LINE:
+import { sendOtp, verifyOtp } from "../../api/auth";
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
@@ -28,7 +30,6 @@ export default function VerifyEmail() {
     setError("");
     setBusy(true);
     try {
-      // Use the API client (it automatically sends the Bearer token from localStorage)
       await sendOtp();
       setSent(true);
       setCooldown(60);
