@@ -6,7 +6,7 @@ import Field from "../../components/ui/Field";
 import { UserIcon, ShieldCheckIcon, EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 export default function Register() {
-  const { user } = useAuth();
+  const { user, login } = useAuth(); // ADDED: login from context
   const location = useLocation();
   const navigate = useNavigate();
   const from = location.state?.from;
@@ -23,8 +23,13 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // If already logged in, redirect
-  if (user) return <Navigate to={from || `/${user.role}`} replace />;
+  // FIXED: If logged in and verified, redirect. If logged in but NOT verified, force verify.
+  if (user && user.email_verified_at) {
+    return <Navigate to={from || `/${user.role}`} replace />;
+  }
+  if (user && !user.email_verified_at) {
+    return <Navigate to="/verify" state={{ email: user.email }} replace />;
+  }
 
   const first = (key) => errors[key]?.[0];
   const update = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,14 +42,18 @@ export default function Register() {
     try {
       const response = await registerUser(form);
       const token = response.token || response.data?.token;
+      const userData = response.user || response.data?.user; // FIXED: extract user data
 
       if (token) {
-        // ⚠️ THIS IS THE MISSING LINE
+        // Save token to localStorage for api.js
         localStorage.setItem("token", token);
+        
+        // FIXED: Update AuthContext state immediately
+        login(token, userData);
 
         navigate("/verify", {
           state: {
-            email: response.user?.email || response.data?.user?.email,
+            email: userData?.email,
             tempToken: token
           }
         });
