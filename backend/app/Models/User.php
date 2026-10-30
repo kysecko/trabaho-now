@@ -3,24 +3,25 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
-use App\Notifications\VerifyEmailNotification;
-use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne; // MAKE SURE THIS IS HERE
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'is_verified', 'email_verified_at'])]
+// email_verified_at and is_verified removed: they are only set by verifyOtp() via forceFill().
+// role stays: register() validates it to client|jobseeker before create().
+#[Fillable(['name', 'email', 'password', 'role'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    // We use OTP, not Laravel's verification link.
     public function sendEmailVerificationNotification()
     {
     }
@@ -40,7 +41,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(IdVerification::class);
     }
 
-    // MAKE SURE THESE TWO ARE HERE
     public function jobseekerProfile(): HasOne
     {
         return $this->hasOne(JobseekerProfile::class);
