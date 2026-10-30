@@ -39,6 +39,9 @@ export default function Register() {
       const token = response.token || response.data?.token;
 
       if (token) {
+        // ⚠️ THIS IS THE MISSING LINE
+        localStorage.setItem("token", token);
+
         navigate("/verify", {
           state: {
             email: response.user?.email || response.data?.user?.email,
