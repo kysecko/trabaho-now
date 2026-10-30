@@ -59,6 +59,7 @@ export default function VerifyEmail() {
     }
   };
 
+  console.log("VerifyEmail v2: logout flow");
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (code.length !== 6) return;
