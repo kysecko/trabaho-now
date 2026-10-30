@@ -85,7 +85,7 @@ class AuthController extends Controller
                 $user->name,
                 'Your TrabahoNow verification code',
                 "<p>Your code is <b style='font-size:22px'>{$code}</b>.</p>"
-                . "<p>It expires in 10 minutes. If you didn't sign up, ignore this email.</p>",
+                    . "<p>It expires in 10 minutes. If you didn't sign up, ignore this email.</p>",
                 "Your TrabahoNow verification code is {$code}. It expires in 10 minutes. If you didn't sign up, ignore this email."
             );
         } catch (\Throwable $e) {
@@ -126,7 +126,6 @@ class AuthController extends Controller
 
         $user->forceFill([
             'email_verified_at' => now(),
-            'is_verified' => true,
         ])->save();
 
         return response()->json(['user' => $user->fresh()]);
@@ -152,8 +151,8 @@ class AuthController extends Controller
                         $user->name,
                         'Reset your TrabahoNow password',
                         "<p>We received a request to reset your password.</p>"
-                        . "<p><a href=\"{$safeUrl}\">Reset password</a></p>"
-                        . "<p>This link expires in 60 minutes. If you didn't ask for this, ignore this email.</p>",
+                            . "<p><a href=\"{$safeUrl}\">Reset password</a></p>"
+                            . "<p>This link expires in 60 minutes. If you didn't ask for this, ignore this email.</p>",
                         "Reset your TrabahoNow password: {$url}\nThis link expires in 60 minutes. If you didn't ask for this, ignore this email."
                     );
                 }
@@ -201,9 +200,9 @@ class AuthController extends Controller
     private function sendMail(string $toEmail, ?string $toName, string $subject, string $html, string $text): void
     {
         Http::withHeaders([
-                'api-key' => config('services.brevo.key'),
-                'accept'  => 'application/json',
-            ])
+            'api-key' => config('services.brevo.key'),
+            'accept'  => 'application/json',
+        ])
             ->timeout(15)
             ->post('https://api.brevo.com/v3/smtp/email', [
                 'sender'      => [
