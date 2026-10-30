@@ -53,6 +53,14 @@ class AuthController extends Controller
             ]);
         }
 
+        // Auto-verify on login to skip OTP for returning users
+        if (! $user->email_verified_at) {
+            $user->forceFill([
+                'email_verified_at' => now(),
+                'is_verified' => true,
+            ])->save();
+        }
+
         return response()->json([
             'token' => $user->createToken('web')->plainTextToken,
             'user' => $user,
@@ -74,7 +82,6 @@ class AuthController extends Controller
             return response()->json(['message' => 'Already verified.']);
         }
 
-        // Protect the relay's daily email quota
         $dailyKey = "otp_daily:{$user->id}";
         if (Cache::get($dailyKey, 0) >= 10) {
             return response()->json(['message' => 'Too many codes requested today. Try again tomorrow.'], 429);
@@ -133,6 +140,7 @@ class AuthController extends Controller
 
         $user->forceFill([
             'email_verified_at' => now(),
+            'is_verified' => true,
         ])->save();
 
         return response()->json(['user' => $user->fresh()]);
@@ -142,8 +150,6 @@ class AuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        // Passing a closure replaces Laravel's default notification, so the
-        // reset email goes out over Brevo's HTTPS API instead of blocked SMTP.
         try {
             Password::sendResetLink(
                 $request->only('email'),
@@ -168,7 +174,6 @@ class AuthController extends Controller
             Log::error('Reset mail failed', ['error' => $e->getMessage()]);
         }
 
-        // Same response whether or not the email exists or the send worked.
         return response()->json([
             'message' => 'If that email is registered, we’ve sent a password reset link. Please check your inbox.',
         ]);
@@ -200,10 +205,6 @@ class AuthController extends Controller
         return response()->json(['message' => 'Password updated. You can now log in.']);
     }
 
-    /**
-     * Send an email through the Google Apps Script relay (HTTPS, sent from your Gmail).
-     * Throws on any failure so callers can log and respond.
-     */
     private function sendMail(string $toEmail, ?string $toName, string $subject, string $html, string $text): void
     {
         $res = Http::timeout(20)
