@@ -18,6 +18,8 @@ use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
+    // In AuthController.php
+
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -34,30 +36,46 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Registration successful. Please verify your email.',
             'token' => $token,
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'email_verified_at' => $user->email_verified_at,
+                'is_verified' => (bool) $user->is_verified,  
+                'verification_status' => $user->verification_status ?? 'none',  
+            ],
         ], 201);
     }
 
-public function login(Request $request)
-{
-    $data = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required', 'string'],
-    ]);
+    public function login(Request $request)
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
 
-    $user = User::where('email', $data['email'])->first();
+        $user = User::where('email', $data['email'])->first();
 
-    if (! $user || ! Hash::check($data['password'], $user->password)) {
-        throw ValidationException::withMessages([
-            'email' => ['Invalid email or password.'],
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Invalid email or password.'],
+            ]);
+        }
+
+        return response()->json([
+            'token' => $user->createToken('web')->plainTextToken,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'email_verified_at' => $user->email_verified_at,
+                'is_verified' => (bool) $user->is_verified, // 👈 ADDED
+                'verification_status' => $user->verification_status ?? 'none',  
+            ],
         ]);
     }
-
-    return response()->json([
-        'token' => $user->createToken('web')->plainTextToken,
-        'user' => $user,
-    ]);
-}
 
     public function logout(Request $request)
     {
