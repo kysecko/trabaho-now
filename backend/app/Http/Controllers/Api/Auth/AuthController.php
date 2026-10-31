@@ -92,14 +92,12 @@ class AuthController extends Controller
 
         Cache::put("otp:{$user->id}", Hash::make($code), now()->addMinutes(10));
         Cache::forget("otp_attempts:{$user->id}");
-
         try {
             $this->sendMail(
                 $user->email,
                 $user->name,
                 'Your TrabahoNow verification code',
-                "<p>Your code is <b style='font-size:22px'>{$code}</b>.</p>"
-                . "<p>It expires in 10 minutes. If you didn't sign up, ignore this email.</p>",
+                view('emails.verify-otp', ['code' => $code])->render(),
                 "Your TrabahoNow verification code is {$code}. It expires in 10 minutes. If you didn't sign up, ignore this email."
             );
         } catch (\Throwable $e) {
@@ -164,8 +162,8 @@ class AuthController extends Controller
                         $user->name,
                         'Reset your TrabahoNow password',
                         "<p>We received a request to reset your password.</p>"
-                        . "<p><a href=\"{$safeUrl}\">Reset password</a></p>"
-                        . "<p>This link expires in 60 minutes. If you didn't ask for this, ignore this email.</p>",
+                            . "<p><a href=\"{$safeUrl}\">Reset password</a></p>"
+                            . "<p>This link expires in 60 minutes. If you didn't ask for this, ignore this email.</p>",
                         "Reset your TrabahoNow password: {$url}\nThis link expires in 60 minutes. If you didn't ask for this, ignore this email."
                     );
                 }
