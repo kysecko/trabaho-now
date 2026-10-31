@@ -43,7 +43,7 @@ export default function Register() {
         // login() stores the token and sets the user state
         login(token, userData);
         
-        // 🔥 IMMEDIATELY navigate to verify, bypassing any redirect logic
+        
         navigate("/verify", { replace: true, state: { email: userData.email } });
       } else {
         setErrors({ form: ["Registration succeeded, but no token was returned."] });
