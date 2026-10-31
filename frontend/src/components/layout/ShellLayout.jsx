@@ -10,7 +10,6 @@ import { useAuth } from "../../context/AuthContext";
 
 import {
   ArrowRightOnRectangleIcon,
-  BellIcon,
   XMarkIcon,
   EllipsisHorizontalIcon,
   ExclamationTriangleIcon,
@@ -22,7 +21,7 @@ export default function ShellLayout({ title, links }) {
   const { pathname } = useLocation();
 
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false); // NEW: Logout Modal State
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const bottomNavLinks = links.slice(0, 3);
   const drawerLinks = links.slice(3);
@@ -36,46 +35,37 @@ export default function ShellLayout({ title, links }) {
   const isMoreActive = !isPrimaryRoute && links.some(isRouteActive);
   const userInitial = user?.name?.charAt(0)?.toUpperCase() || "U";
 
+  // Get the current page name for the header breadcrumb
+  const activeLink = links.find((link) => isRouteActive(link));
+  const pageTitle = activeLink ? activeLink.label : title;
+
   // Close menus on route change
   useEffect(() => {
     setIsMoreMenuOpen(false);
     setIsLogoutModalOpen(false);
   }, [pathname]);
 
-  // Handle escape key and scroll lock for More Menu
+  // Handle escape key and scroll lock for Menus
   useEffect(() => {
-    if (!isMoreMenuOpen) return;
+    if (!isMoreMenuOpen && !isLogoutModalOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") setIsMoreMenuOpen(false);
+      if (event.key === "Escape") {
+        setIsMoreMenuOpen(false);
+        setIsLogoutModalOpen(false);
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isMoreMenuOpen]);
-
-  // Handle escape key and scroll lock for Logout Modal
-  useEffect(() => {
-    if (!isLogoutModalOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") setIsLogoutModalOpen(false);
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isLogoutModalOpen]);
+  }, [isMoreMenuOpen, isLogoutModalOpen]);
 
   const handleLogoutConfirm = async () => {
     setIsMoreMenuOpen(false);
     setIsLogoutModalOpen(false);
-
     try {
       await logout();
       navigate("/login", { replace: true });
@@ -141,10 +131,6 @@ export default function ShellLayout({ title, links }) {
     </div>
   );
 
-  const notificationPath = pathname.startsWith("/jobseeker")
-    ? "/jobseeker/notifications"
-    : "/client/notifications";
-
   return (
     <div className="relative flex h-dvh overflow-hidden bg-gray-50 font-sans text-gray-800">
       {/* DESKTOP SIDEBAR */}
@@ -164,8 +150,6 @@ export default function ShellLayout({ title, links }) {
 
         <div className="space-y-5 border-t border-[#2b2b40] p-5">
           {renderUserProfile()}
-
-          {/* Trigger Modal instead of immediate logout */}
           <button
             type="button"
             onClick={() => setIsLogoutModalOpen(true)}
@@ -179,30 +163,25 @@ export default function ShellLayout({ title, links }) {
 
       {/* MAIN APPLICATION */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        
         {/* TOP HEADER */}
         <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
-          <div className="min-w-0 md:hidden">
-            <p className="truncate text-sm font-bold text-[#ff4d00]">
-              TRABAHONOW
-            </p>
-            <p className="truncate text-xs text-gray-500">{title}</p>
+          
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span className="hidden sm:inline">{title}</span>
+            <span className="hidden sm:inline">/</span>
+            <span className="font-medium text-gray-900">{pageTitle}</span>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 sm:gap-4">
-            <button
-              type="button"
-              onClick={() => navigate(notificationPath)}
-              aria-label="View notifications"
-              className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-            >
-              <BellIcon className="h-5 w-5" />
-            </button>
-
-            <div className="flex items-center gap-2 py-1 pl-1 pr-2">
+          {/* Right side actions */}
+          <div className="flex items-center gap-4">
+            {/* User Profile Info (No Bell/Date) */}
+            <div className="flex items-center gap-2 py-1">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#ff4d00] text-sm font-semibold text-white">
                 {userInitial}
               </div>
-              <span className="hidden max-w-36 truncate text-sm font-medium text-gray-700 sm:block">
+              <span className="hidden max-w-36 truncate text-sm font-medium text-gray-700 md:block">
                 {user?.name || "User"}
               </span>
             </div>
@@ -289,7 +268,6 @@ export default function ShellLayout({ title, links }) {
             </nav>
 
             <div className="shrink-0 border-t border-[#2b2b40] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-              {/* Trigger Modal from Mobile Drawer */}
               <button
                 type="button"
                 onClick={() => {
@@ -306,10 +284,9 @@ export default function ShellLayout({ title, links }) {
         </div>
       )}
 
-      {/* --- NEW: LOGOUT CONFIRMATION MODAL --- */}
+      {/* LOGOUT CONFIRMATION MODAL */}
       {isLogoutModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <button
             type="button"
             tabIndex={-1}
@@ -318,7 +295,6 @@ export default function ShellLayout({ title, links }) {
             className="absolute inset-0 h-full w-full cursor-default bg-black/60 backdrop-blur-sm"
           />
 
-          {/* Modal Content */}
           <div
             role="dialog"
             aria-modal="true"

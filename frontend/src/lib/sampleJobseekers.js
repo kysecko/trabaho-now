@@ -1,15 +1,11 @@
-
-// mga dump data lang to
 export const SERVICE_NAMES = [
-  "Plumbing",
-  "Electrical",
-  "Home cleaning",
+  "Plumber",
+  "Electrician",
+  "Home Cleaning",
   "Carpentry",
   "Aircon service",
   "Painting",
   "Appliance repair",
-  "Tutoring",
-  "Delivery help",
   "Gardening",
 ];
 
