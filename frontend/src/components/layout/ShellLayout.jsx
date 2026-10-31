@@ -212,7 +212,7 @@ export default function ShellLayout({ title, links }) {
         {/* PAGE CONTENT */}
         <main
           id="main-content"
-          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:p-6 md:p-8"
+          className="bg-[#F7FAFC] min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:p-6 md:p-8"
         >
           <Outlet />
         </main>
