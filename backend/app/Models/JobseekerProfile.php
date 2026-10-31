@@ -3,23 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JobseekerProfile extends Model
 {
-    public function toArray(Request $request): array
-    {
-        $profile = $this->jobseekerProfile;
+    // Add the columns you actually have, e.g.:
+    protected $fillable = [
+        'user_id',
+        'profession',
+        'location',
+        'rating',
+        'rate',
+        'rate_unit',
+        'availability_status',
+    ];
 
-        return [
-            'id'         => $this->id,
-            'name'       => $this->name,
-            'avatar'     => $this->avatar ? asset('storage/' . $this->avatar) : null,
-            'profession' => $this->services->first()?->name ?? $profile?->profession,
-            'location'   => $profile?->location,
-            'rating'     => (float) ($profile?->rating ?? 0),
-            'rate'       => $profile?->rate,
-            'rateUnit'   => $profile?->rate_unit,
-            'verified'   => true, // the query only returns verified, approved users
-        ];
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
