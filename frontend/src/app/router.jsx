@@ -18,6 +18,7 @@ import Services from "../pages/public/Services";
 import HowItWorks from "../pages/public/HowItWorks";
 import Privacy from "../pages/public/Privacy";
 import Terms from "../pages/public/Terms";
+import Download from "../pages/public/Download";  
 
 // Auth Pages
 import Login from "../pages/auth/Login";
@@ -49,6 +50,8 @@ export default function AppRouter() {
         <Route path="/jobseekers" element={<Jobseekers />} />
         <Route path="/services" element={<Services />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
+        
+        <Route path="/download" element={<Download />} /> 
       </Route>
 
       {/* separate routes for the legal */}
