@@ -44,7 +44,7 @@
                                 Enter this code in TrabahoNow to verify your email and complete your registration.
                             </p>
 
-                            {{-- Code boxes (mirror the OTP inputs on the verify page) --}}
+                            
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"
                                 style="margin:0 auto 28px;">
                                 <tr>
@@ -62,7 +62,7 @@
                             </table>
 
                             <p style="margin:0; font-size:14px; line-height:22px; color:#1E293B;">
-                                This code expires in <strong>10 minutes</strong>.
+                                This code expires in <strong>1 minute</strong>.
                             </p>
 
                         </td>

@@ -62,7 +62,7 @@ export default function AdminLayout() {
     if (pathname.includes("/services")) return "Service Listings";
     if (pathname.includes("/reports")) return "Reports";
     if (pathname.includes("/settings")) return "System Settings";
-    return "Dashboard"; 
+    return "Dashboard";
   };
 
   const currentDate = new Date().toISOString().split('T')[0];
@@ -113,7 +113,7 @@ export default function AdminLayout() {
         </div>
 
         {/* Navigation List */}
-        <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
+        <nav className="sidebar-scroll flex-1 space-y-1 overflow-y-auto px-4 py-4">
           <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-wider text-admin-text-muted">
             Workspace
           </p>
@@ -237,7 +237,7 @@ export default function AdminLayout() {
               <div className="mt-6 flex w-full flex-col-reverse gap-3 sm:flex-row sm:justify-center">
                 <button
                   type="button"
-                  onClick={() => setIsLogoutModalOpen(false  )}
+                  onClick={() => setIsLogoutModalOpen(false)}
                   className="w-full rounded-xl cursor-pointer border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 sm:w-auto"
                 >
                   Cancel
