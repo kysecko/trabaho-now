@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('jobseeker_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
-            $table->string('photo_path')->nullable();
+            $table->string('photo_path')->nullable();$table->unsignedInteger('jobs_completed')->default(0);
             $table->string('barangay')->nullable();
             $table->string('availability_status')->default('available');
             $table->text('bio')->nullable();
