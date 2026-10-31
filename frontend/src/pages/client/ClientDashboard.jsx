@@ -12,8 +12,9 @@ import WelcomeModal from "../../components/shared/WelcomeModal";
 import AnalyticsCard from "../../components/ui/dashboard/AnalyticsCard";
 import JobseekerCard from "../../components/ui/dashboard/JobseekerCard";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../api/client"; 
+import api from "../../api/client";
 
+import { useNavigate } from "react-router-dom";
 
 const analytics = [
   { id: 1, title: "Active Requests", value: 0, icon: BriefcaseIcon },
@@ -35,6 +36,9 @@ const toCardData = (j) => ({
 });
 
 export default function ClientDashboard({ data = analytics }) {
+
+  const navigate = useNavigate();
+
   const { user } = useAuth();
 
   const [jobseekers, setJobseekers] = useState([]);
@@ -88,7 +92,12 @@ export default function ClientDashboard({ data = analytics }) {
             </p>
           </div>
 
-          <Button leftIcon={MagnifyingGlassIcon} variant="primary">
+          <Button
+            type="button"
+            onClick={() => navigate("/client/search")}
+            leftIcon={MagnifyingGlassIcon}
+            variant="primary"
+          >
             Browse Jobseekers
           </Button>
         </section>

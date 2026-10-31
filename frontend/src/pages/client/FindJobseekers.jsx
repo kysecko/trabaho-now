@@ -464,7 +464,7 @@ export default function FindJobseekers() {
                                         {person.name}
                                     </h3>
 
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-primary">
                                         {person.service ?? "Service Provider"}
                                     </p>
 

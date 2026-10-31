@@ -3,10 +3,8 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import useInstallPrompt from "../../hooks/useInstallPrompt";
 import Container from "./Container";
-
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 
-// Only three tabs on the public site.
 const links = [
   { to: "/how-it-works", label: "How it works" },
   { to: "/jobseekers", label: "Find Jobseekers" },
@@ -20,7 +18,8 @@ const linkClass = ({ isActive }) =>
 
 export default function PublicNavbar() {
   const { user } = useAuth();
-  const { installed, install } = useInstallPrompt();
+  // 👇 Destructure canInstall too
+  const { canInstall, installed, install } = useInstallPrompt();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -28,8 +27,13 @@ export default function PublicNavbar() {
 
   const handleDownload = async () => {
     close();
-    const done = await install();
-    if (!done) navigate("/download");
+    if (canInstall) {
+      // If Android/Chrome supports it, trigger the native prompt
+      await install();
+    } else {
+      // If iOS or unsupported browser, take them to the instructions page
+      navigate("/download");
+    }
   };
 
   return (
@@ -39,7 +43,7 @@ export default function PublicNavbar() {
           <Link
             to="/"
             onClick={close}
-            className="text-2xl font-extrabold tracking-tight text-navy sm:text-3xl"
+            className="text-2xl font-extrabold tracking-tight text-navy sm:text-3xl z-50 relative"
           >
             Trabaho<span className="text-primary">Now</span>
           </Link>
@@ -50,7 +54,7 @@ export default function PublicNavbar() {
             aria-expanded={open}
             aria-label="Toggle menu"
             onClick={() => setOpen(!open)}
-            className="ml-auto rounded-lg p-1.5 text-ink md:hidden"
+            className="ml-auto rounded-lg p-1.5 text-ink md:hidden z-50 relative"
           >
             <svg
               width="24"
@@ -70,7 +74,7 @@ export default function PublicNavbar() {
             </svg>
           </button>
 
-          {/* Links + actions: full-width dropdown on phones, one row from md up */}
+          {/* Links + actions */}
           <div
             className={`${
               open ? "flex" : "hidden"
