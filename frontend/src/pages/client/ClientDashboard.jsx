@@ -12,7 +12,7 @@ import AnalyticsCard from "../../components/ui/dashboard/AnalyticsCard";
 import JobseekerCard from "../../components/ui/dashboard/JobseekerCard";
 import { useAuth } from "../../context/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "../../api/client";
 
 const analytics = [
   { id: 1, title: "Active Requests", value: 0, icon: BriefcaseIcon },
@@ -29,33 +29,31 @@ export default function ClientDashboard({ data = analytics }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const controller = new AbortController();
+    let ignore = false;
 
     (async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(
-          `${API_URL}/api/public/jobseekers?sort=top_rated&per_page=8`,
-          {
-            headers: { Accept: "application/json" },
-            signal: controller.signal,
-          }
-        );
+        const query = new URLSearchParams({
+          sort: "top_rated",
+          per_page: "8",
+        });
 
-        if (!res.ok) throw new Error("Failed to load jobseekers");
+        const result = await api.get(`/public/jobseekers?${query}`);
 
-        const result = await res.json();
-        setJobseekers(result.data ?? []);
+        if (!ignore) setJobseekers(result?.data ?? []);
       } catch (err) {
-        if (err.name !== "AbortError") setError(err.message);
+        if (!ignore) setError(err.message);
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!ignore) setLoading(false);
       }
     })();
 
-    return () => controller.abort();
+    return () => {
+      ignore = true; // prevents state updates after unmount / StrictMode re-run
+    };
   }, []);
 
   const handleHire = (jobseekerId) => {
