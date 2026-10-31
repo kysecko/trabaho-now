@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Public;
 
+use App\Models\JobseekerProfile;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PublicJobseekerResource;
 use App\Models\User;
