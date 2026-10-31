@@ -16,14 +16,13 @@ export default function WelcomeModal() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
-  // Only brand-new clients: not verified, nothing submitted yet, not dismissed before
-  const eligible =
-    user?.role === "client" &&
-    !user.is_verified &&
-    (user.verification_status ?? "none") === "none";
+  // 👇 CHANGED: We only check if they are a client and haven't seen it yet.
+  const eligible = user?.role === "client";
 
   useEffect(() => {
-    if (eligible && !wasSeen(user)) setOpen(true);
+    if (eligible && !wasSeen(user)) {
+      setOpen(true);
+    }
   }, [eligible, user]);
 
   const close = () => {
@@ -37,7 +36,6 @@ export default function WelcomeModal() {
     const onKey = (e) => e.key === "Escape" && close();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   if (!open) return null;
