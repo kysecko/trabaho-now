@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import Button from "../../components/ui/Button";
-import WelcomeModal from "../../components/shared/WelcomeModal";
+import WelcomeModal from "../../components/ui/WelcomeModal";
 import JobseekerCard from "../../components/ui/dashboard/JobseekerCard";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/client";
@@ -90,7 +90,7 @@ export default function ClientDashboard() {
         {/* Unverified Banner - Using !user?.is_verified to catch null/undefined too */}
         {!user?.is_verified && user?.verification_status !== 'pending' && (
           <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col items-center sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
                 <ExclamationTriangleIcon className="h-6 w-6 shrink-0 text-orange-600" />
                 <div>
