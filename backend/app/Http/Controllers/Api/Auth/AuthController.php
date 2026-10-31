@@ -38,34 +38,26 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request)
-    {
-        $data = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+public function login(Request $request)
+{
+    $data = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required', 'string'],
+    ]);
 
-        $user = User::where('email', $data['email'])->first();
+    $user = User::where('email', $data['email'])->first();
 
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Invalid email or password.'],
-            ]);
-        }
-
-        // Auto-verify on login to skip OTP for returning users
-        if (! $user->email_verified_at) {
-            $user->forceFill([
-                'email_verified_at' => now(),
-                'is_verified' => true,
-            ])->save();
-        }
-
-        return response()->json([
-            'token' => $user->createToken('web')->plainTextToken,
-            'user' => $user,
+    if (! $user || ! Hash::check($data['password'], $user->password)) {
+        throw ValidationException::withMessages([
+            'email' => ['Invalid email or password.'],
         ]);
     }
+
+    return response()->json([
+        'token' => $user->createToken('web')->plainTextToken,
+        'user' => $user,
+    ]);
+}
 
     public function logout(Request $request)
     {
@@ -138,7 +130,6 @@ class AuthController extends Controller
 
         $user->forceFill([
             'email_verified_at' => now(),
-            'is_verified' => true,
         ])->save();
 
         return response()->json(['user' => $user->fresh()]);
