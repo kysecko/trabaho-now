@@ -13,6 +13,7 @@ import ClientSettings from "../../pages/client/ClientSettings";
 import ClientHelp from "../../pages/client/ClientHelp";
 import ClientCredits from "../../pages/client/ClientCredits";
 import ClientNotifications from "../../pages/client/ClientNotifications";
+import JobseekerProfile from "../../pages/client/JobseekerProfile";
 
 export default function ClientRoutes() {
   return [
@@ -29,6 +30,7 @@ export default function ClientRoutes() {
           <Route path="notifications" element={<ClientNotifications />} />
           <Route path="settings" element={<ClientSettings />} />
           <Route path="help" element={<ClientHelp />} />
+          <Route path="jobseekers/:id" element={<JobseekerProfile />} />
         </Route>
       </Route>
     </Route>

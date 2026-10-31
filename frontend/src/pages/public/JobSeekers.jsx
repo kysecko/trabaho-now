@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { CheckBadgeIcon, MapPinIcon, ShieldCheckIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
+import { MapPinIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { StarIcon, CheckBadgeIcon } from "@heroicons/react/24/solid";
 import { useQuery } from "@tanstack/react-query";
 import Container from "../../components/layout/Container";
 import { SectionHeading } from "../../components/ui/public/PublicUI";
@@ -42,7 +42,7 @@ const JobseekerCard = ({ person }) => {
               <span>{person.service || "General Services"}</span>
               <span className="text-gray-300">&middot;</span>
               <MapPinIcon className="h-3.5 w-3.5" />
-              <span>{person.barangay || "Unknown"}</span>
+              <span>{person.barangay || "Sta.Maria"}</span>
             </p>
           </div>
         </div>
@@ -57,7 +57,7 @@ const JobseekerCard = ({ person }) => {
 
           {person.is_verified && (
             <div className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
-              <ShieldCheckIcon className="h-3.5 w-3.5" />
+              <CheckBadgeIcon className="h-3.5 w-3.5" />
               Verified
             </div>
           )}
