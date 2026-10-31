@@ -39,7 +39,7 @@ async function request(method, path, body, { blob = false } = {}) {
     }
 
     throw new Error(
-      "We couldn't connect to Trabaho Now. Please try again in a moment."
+      "Something went wrong. Please try again in a moment."
     );
   }
 
