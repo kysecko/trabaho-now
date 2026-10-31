@@ -97,7 +97,7 @@ class AuthController extends Controller
                 $user->email,
                 $user->name,
                 'Your TrabahoNow verification code',
-                view('emails.verify-otp', ['code' => $code])->render(),
+                view('email.verify-otp', ['code' => $code])->render(),
                 "Your TrabahoNow verification code is {$code}. It expires in 10 minutes. If you didn't sign up, ignore this email."
             );
         } catch (\Throwable $e) {
