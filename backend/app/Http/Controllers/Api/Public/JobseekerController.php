@@ -22,50 +22,50 @@ class JobseekerController extends Controller
             ->where('verification_status', 'approved')
             ->with([
                 'jobseekerProfile',
-                'services' => fn ($q) => $q->where('is_active', true),
+                'services' => fn($q) => $q->where('is_active', true),
             ])
             ->withCount([
                 'jobRequests as total_requests_count',
-                'jobRequests as cancelled_requests_count' => fn ($q) => $q->where('status', 'cancelled'),
+                'jobRequests as cancelled_requests_count' => fn($q) => $q->where('status', 'cancelled'),
             ])
 
             // Search by worker name or service name
-            ->when($search !== '', fn ($q) => $q->where(function ($w) use ($search) {
+            ->when($search !== '', fn($q) => $q->where(function ($w) use ($search) {
                 $w->where('name', 'ilike', "%{$search}%")
-                  ->orWhereHas('services', fn ($s) => $s
-                      ->where('is_active', true)
-                      ->where('name', 'ilike', "%{$search}%"));
+                    ->orWhereHas('services', fn($s) => $s
+                        ->where('is_active', true)
+                        ->where('name', 'ilike', "%{$search}%"));
             }))
 
             // Category tag (partial match, so "Cleaning" matches "Aircon Cleaning")
-            ->when($service !== '', fn ($q) => $q->whereHas('services', fn ($s) => $s
+            ->when($service !== '', fn($q) => $q->whereHas('services', fn($s) => $s
                 ->where('is_active', true)
                 ->where('name', 'ilike', "%{$service}%")))
 
-            ->when($request->query('barangay'), fn ($q, $b) =>
-                $q->whereHas('jobseekerProfile', fn ($p) => $p->where('barangay', $b)))
+            ->when($request->query('barangay'), fn($q, $b) =>
+            $q->whereHas('jobseekerProfile', fn($p) => $p->where('barangay', $b)))
 
-            ->when($request->query('max_rate'), fn ($q, $max) =>
-                $q->whereHas('services', fn ($s) => $s
-                    ->where('is_active', true)
-                    ->where('rate', '<=', (int) $max)))
+            ->when($request->query('max_rate'), fn($q, $max) =>
+            $q->whereHas('services', fn($s) => $s
+                ->where('is_active', true)
+                ->where('rate', '<=', (int) $max)))
 
-            ->when($request->boolean('available'), fn ($q) =>
-                $q->whereHas('jobseekerProfile', fn ($p) => $p->where('availability_status', 'available')))
+            ->when($request->boolean('available'), fn($q) =>
+            $q->whereHas('jobseekerProfile', fn($p) => $p->where('availability_status', 'available')))
 
             // Date filter: hide workers who already have a booked job that day
-            ->when($request->query('date'), fn ($q, $date) =>
-                $q->whereHas('jobseekerProfile', fn ($p) => $p->where('availability_status', '!=', 'unavailable'))
-                  ->whereDoesntHave('jobRequests', fn ($r) => $r
-                      ->whereIn('status', ['accepted', 'in_progress'])
-                      ->whereDate('scheduled_at', $date)))
+            ->when($request->query('date'), fn($q, $date) =>
+            $q->whereHas('jobseekerProfile', fn($p) => $p->where('availability_status', '!=', 'unavailable'))
+                ->whereDoesntHave('jobRequests', fn($r) => $r
+                    ->whereIn('status', ['accepted', 'in_progress'])
+                    ->whereDate('scheduled_at', $date)))
 
-            ->when($request->query('sort', 'top_rated') === 'top_rated', fn ($q) =>
-                $q->orderByDesc(
-                    JobseekerProfile::select('rating')
-                        ->whereColumn('jobseeker_profiles.user_id', 'users.id')
-                        ->limit(1)
-                ))
+            ->when($request->query('sort', 'top_rated') === 'top_rated', fn($q) =>
+            $q->orderByDesc(
+                JobseekerProfile::select('rating')
+                    ->whereColumn('jobseeker_profiles.user_id', 'users.id')
+                    ->limit(1)
+            ))
             ->latest()
             ->paginate($perPage);
 
@@ -83,5 +83,24 @@ class JobseekerController extends Controller
             ->pluck('barangay');
 
         return response()->json(['data' => $list]);
+    }
+
+    public function show($id)
+    {
+        $jobseeker = User::query()
+            ->where('role', 'jobseeker')
+            ->where('is_verified', true)
+            ->where('verification_status', 'approved')
+            ->with([
+                'jobseekerProfile',
+                'services' => fn($q) => $q->where('is_active', true),
+            ])
+            ->withCount([
+                'jobRequests as total_requests_count',
+                'jobRequests as cancelled_requests_count' => fn($q) => $q->where('status', 'cancelled'),
+            ])
+            ->findOrFail($id);
+
+        return new PublicJobseekerResource($jobseeker);
     }
 }
