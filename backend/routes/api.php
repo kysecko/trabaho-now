@@ -4,9 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
 
-// REMOVED: Artisan::call('migrate --force').
-// Run `php artisan migrate --force` once in your deploy/start command instead.
-
 require __DIR__ . '/api/auth.php';
 
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
@@ -18,14 +15,24 @@ Route::prefix('public')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    // ---- Reachable while the email is NOT yet verified ----
-    Route::get('/user', fn (Request $request) => $request->user());
-    Route::post('/logout', [AuthController::class, 'logout']); // remove the duplicate from api/auth.php or shared.php if it exists there
+    Route::get('/user', function (Request $request) {
+        $user = $request->user();
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'email_verified_at' => $user->email_verified_at,
+            'is_verified' => (bool) $user->is_verified,
+            'verification_status' => $user->verification_status ?? 'none',
+        ]);
+    });
+
+    Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::post('/email/otp', [AuthController::class, 'sendOtp'])->middleware('throttle:3,1');
     Route::post('/email/otp/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
 
-    // ---- Everything below requires a verified email ----
     Route::middleware('verified')->group(function () {
         require __DIR__ . '/api/shared.php';
 

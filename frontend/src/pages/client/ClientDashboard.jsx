@@ -70,7 +70,7 @@ export default function ClientDashboard() {
       
       <main className="w-full space-y-6">
         
-        {/* 👇 VERIFICATION BANNERS (Made more aggressive) */}
+        {/* 👇 FORCED VERIFICATION BANNERS */}
         
         {/* Pending Banner */}
         {user?.verification_status === 'pending' && (
@@ -87,8 +87,8 @@ export default function ClientDashboard() {
           </div>
         )}
 
-        {/* Unverified Banner - Triggers if is_verified is strictly false */}
-        {user?.is_verified === false && user?.verification_status !== 'pending' && (
+        {/* Unverified Banner - Using !user?.is_verified to catch null/undefined too */}
+        {!user?.is_verified && user?.verification_status !== 'pending' && (
           <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
@@ -133,8 +133,6 @@ export default function ClientDashboard() {
             Browse Jobseekers
           </Button>
         </section>
-
-        {/* 👇 REMOVED THE ANALYTICS GRID HERE */}
 
         {/* Top recommended jobseekers */}
         <section>
