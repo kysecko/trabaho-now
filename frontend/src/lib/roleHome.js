@@ -1,23 +1,18 @@
 export function roleHome(user) {
   if (!user) return "/login";
   
-  // Admin goes straight to admin, no verification needed
+  // Admin goes straight to admin
   if (user.role === "admin") {
-    return "/admin";
+    return "/admin/dashboard";
   }
 
-  // Check verification for everyone else
-  const isVerified = 
-    user.is_verified === true || 
-    user.is_verified === 1 || 
-    user.is_verified === "t" || 
-    user.is_verified === "true";
-
-  if (!isVerified) {
-    return "/verify"; 
+  // If email is NOT verified, send them to the OTP screen
+  if (!user.email_verified_at) {
+    return "/verify";
   }
 
-  // Route the verified users
+  // If email is verified but ID is NOT verified, send them to the dashboard
+  // (The dashboard will show the orange banner)
   switch (user.role) {
     case "client": 
       return "/client/dashboard";   

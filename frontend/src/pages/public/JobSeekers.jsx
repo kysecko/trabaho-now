@@ -6,17 +6,38 @@ import { useQuery } from "@tanstack/react-query";
 import Container from "../../components/layout/Container";
 import { SectionHeading } from "../../components/ui/public/PublicUI";
 import { getPublicJobseekers } from "../../api/public";
-import { SERVICE_NAMES } from "../../lib/sampleJobseekers";
+
+// 👇 Make sure this is defined or imported correctly
+const SERVICE_NAMES = [
+  "Plumber",
+  "Electrician",
+  "Carpentry",
+  "Cleaning",
+  "Appliance Repair",
+];
 
 const initialsOf = (name) => {
   if (!name) return "?";
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2);
 };
 
+// 👇 FIXED: Avatar that handles broken images gracefully
 const JobseekerAvatar = ({ name, image }) => {
-  if (image) {
-    return <img src={image} alt={name} className="h-14 w-14 rounded-full object-cover" />;
+  const [error, setError] = useState(false);
+
+  // If image exists AND isn't a broken local URL (e.g., storage/https://...)
+  if (image && !image.includes("storage/https") && !error) {
+    return (
+      <img 
+        src={image} 
+        alt={name} 
+        className="h-14 w-14 rounded-full object-cover border border-gray-200" 
+        onError={() => setError(true)}
+      />
+    );
   }
+
+  // Fallback to initials
   return (
     <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-lg font-bold text-orange-600">
       {initialsOf(name)}
@@ -33,7 +54,7 @@ const JobseekerCard = ({ person }) => {
       {/* Top Section: Avatar & Details */}
       <div>
         <div className="flex items-start gap-3">
-          <JobseekerAvatar name={person.name} image={person.photo_path} />
+          <JobseekerAvatar name={person.name} image={person.photo_url} />
           <div className="flex flex-col">
             <h3 className="text-lg font-bold text-navy leading-tight">
               {person.name}
@@ -42,7 +63,7 @@ const JobseekerCard = ({ person }) => {
               <span>{person.service || "General Services"}</span>
               <span className="text-gray-300">&middot;</span>
               <MapPinIcon className="h-3.5 w-3.5" />
-              <span>{person.barangay || "Sta.Maria"}</span>
+              <span>{person.barangay || "Sta. Maria"}</span>
             </p>
           </div>
         </div>
@@ -55,6 +76,7 @@ const JobseekerCard = ({ person }) => {
             {isAvailable ? "Available" : "Booked"}
           </div>
 
+          {/* 👇 FIXED: Using is_verified instead of verified */}
           {person.is_verified && (
             <div className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
               <CheckBadgeIcon className="h-3.5 w-3.5" />
@@ -74,7 +96,7 @@ const JobseekerCard = ({ person }) => {
           </div>
           <div className="flex flex-col items-center justify-between border-x border-gray-200 py-1">
             <span className="text-[11px] font-medium text-gray-500">Jobs done</span>
-            <span className="mt-0.5 font-bold text-navy text-sm">{person.jobs || "42"}</span>
+            <span className="mt-0.5 font-bold text-navy text-sm">{person.jobs || "0"}</span>
           </div>
           <div className="flex flex-col items-center justify-center py-1">
             <span className="text-[11px] font-medium text-gray-500">Cancelled</span>
@@ -87,7 +109,7 @@ const JobseekerCard = ({ person }) => {
       <div className="mt-5 flex items-center justify-between pt-2">
         <div>
           <p className="text-lg font-bold text-navy">
-            ₱{person.rate || "500"} <span className="text-sm font-medium text-gray-500">/ hr</span>
+            ₱{person.rate || "500"} <span className="text-sm font-medium text-gray-500">/ job</span>
           </p>
         </div>
         <Link
@@ -107,15 +129,13 @@ export default function Jobseekers() {
   const service = params.get("service") || "All";
   const [onlyAvailable, setOnlyAvailable] = useState(false);
 
-  // TanStack Query handles fetching, caching, and loading states
   const { data: jobseekers = [], isLoading, isError, error } = useQuery({
     queryKey: ['publicJobseekers'],
     queryFn: async () => {
       const res = await getPublicJobseekers();
-      // Handle Laravel pagination safely
       return Array.isArray(res) ? res : res.data || [];
     },
-    staleTime: 1000 * 60 * 5, // Keep cached for 5 minutes (switching tabs won't refresh)
+    staleTime: 1000 * 60 * 5,
   });
 
   const setService = (name) => {

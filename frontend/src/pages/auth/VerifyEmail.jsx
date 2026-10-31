@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { sendOtp, verifyOtp, logoutUser } from "../../api/auth";
+import { sendOtp, verifyOtp } from "../../api/auth";
 
 const CODE_LENGTH = 6;
 
@@ -19,7 +19,6 @@ function OtpInput({ value, onChange, disabled, length = CODE_LENGTH }) {
     const typed = e.target.value.replace(/\D/g, "");
     if (!typed) return;
 
-    // Multiple characters (autofill / fast typing): fill from this box onward
     if (typed.length > 1) {
       const next = (value.slice(0, i) + typed).slice(0, length);
       onChange(next);
@@ -27,7 +26,6 @@ function OtpInput({ value, onChange, disabled, length = CODE_LENGTH }) {
       return;
     }
 
-    // Only allow typing at the next empty slot or overwriting an existing one
     const pos = Math.min(i, value.length);
     const next = value.slice(0, pos) + typed + value.slice(pos + 1);
     onChange(next.slice(0, length));
@@ -54,10 +52,7 @@ function OtpInput({ value, onChange, disabled, length = CODE_LENGTH }) {
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, length);
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, length);
     if (!pasted) return;
     onChange(pasted);
     focusBox(pasted.length);
@@ -88,16 +83,14 @@ function OtpInput({ value, onChange, disabled, length = CODE_LENGTH }) {
 }
 
 export default function VerifyEmail() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [cooldown, setCooldown] = useState(0);
-  const [busy, setBusy] = useState(false); // verifying the code
-  const [resending, setResending] = useState(false); // sending / resending the code
+  const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
 
-  // Set to true once the OTP is accepted, so the redirect to /login
-  // carries the "verified" flag for the success message.
-  const justVerified = useRef(false);
   const autoSent = useRef(false);
 
   const handleSendCode = async () => {
@@ -105,48 +98,40 @@ export default function VerifyEmail() {
     setCode("");
     setResending(true);
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Your session has expired. Please log in again.");
+        return;
+      }
       await sendOtp();
       setCooldown(60);
     } catch (err) {
-      setError(err.message || "Failed to send code.");
+      setError(err.message || "Failed to send code. Please try again.");
     } finally {
       setResending(false);
     }
   };
 
-  // ALL hooks first
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [cooldown]);
 
-  // Send the code once automatically when the page opens
   useEffect(() => {
     if (loading || !user || user.email_verified_at || autoSent.current) return;
     autoSent.current = true;
     handleSendCode();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, user]);
 
-  // Early returns AFTER hooks
   if (loading) return null;
 
-  // After a successful verify we log out locally, so user becomes null
-  // and this sends them to /login (never to the dashboard).
   if (!user) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={justVerified.current ? { verified: true } : undefined}
-      />
-    );
+    return <Navigate to="/login" replace />;
   }
 
-  // Already verified (e.g. opened /verify manually) -> dashboard
-  if (user.email_verified_at && !justVerified.current) {
-    return <Navigate to={`/${user.role}`} replace />;
+  if (user.email_verified_at) {
+    return <Navigate to={`/${user.role}/dashboard`} replace />;
   }
 
   const email = user.email;
@@ -159,18 +144,9 @@ export default function VerifyEmail() {
     setError("");
     try {
       await verifyOtp(code);
-
-      // Revoke the token on the server (ignore failures)
-      try {
-        await logoutUser();
-      } catch {}
-
-      // Clear local auth state -> triggers the <Navigate to="/login"> above
-      justVerified.current = true;
-      logout();
+      await refreshUser();
+      navigate(`/${user.role}/dashboard`, { replace: true });
     } catch (err) {
-      // The server's message is terse ("Invalid or expired code."), so show
-      // a friendlier one that tells the person what to do next.
       setError(
         "That code didn't work. It may be incorrect or expired. Check the code and try again, or tap \"Click to resend\" to get a new one."
       );
@@ -218,8 +194,8 @@ export default function VerifyEmail() {
             {resending
               ? "Sending..."
               : cooldown > 0
-              ? `Resend in ${cooldown}s`
-              : "Click to resend"}
+                ? `Resend in ${cooldown}s`
+                : "Click to resend"}
           </button>
         </p>
       </form>
