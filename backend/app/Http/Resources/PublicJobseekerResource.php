@@ -12,6 +12,9 @@ class PublicJobseekerResource extends JsonResource
         $profile = $this->jobseekerProfile;
         $service = $this->services->first();
 
+        $total = (int) ($this->total_requests_count ?? 0);
+        $cancelled = (int) ($this->cancelled_requests_count ?? 0);
+
         return [
             'id'                  => $this->id,
             'name'                => $this->name,
@@ -23,11 +26,11 @@ class PublicJobseekerResource extends JsonResource
             'service'             => $service?->name,
             'barangay'            => $profile?->barangay,
             'availability_status' => $profile?->availability_status ?? 'unavailable',
-            'rating'              => (float) ($profile?->rating ?? 0),
+            'rating'              => round((float) ($profile?->rating ?? 0), 1),
             'jobs'                => (int) ($profile?->jobs_completed ?? 0),
-            'cancelRate'          => (float) ($profile?->cancel_rate ?? 0),
+            'cancelRate'          => $total > 0 ? round($cancelled / $total * 100, 1) : 0.0,
             'rate'                => $service?->rate,
-            'rate_unit'           => $service?->rate_unit, // remove if you have no such column
+            'rate_unit'           => $service?->rate_unit,
         ];
     }
 }

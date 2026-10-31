@@ -15,6 +15,7 @@ return new class extends Migration
             $table->unsignedInteger('rate');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->string('rate_unit')->default('job')->after('rate');
             $table->timestamps();
         });
     }
