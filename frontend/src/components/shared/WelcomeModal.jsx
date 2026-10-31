@@ -93,7 +93,7 @@ export default function WelcomeModal() {
           onClick={close}
           className="mt-5 w-full text-center text-sm text-muted hover:underline"
         >
-          Maybe later
+          Skip for now 
         </button>
       </div>
     </div>
