@@ -17,9 +17,9 @@ import JobseekerProfile from "../../pages/client/JobseekerProfile";
 
 export default function ClientRoutes() {
   return [
-    <Route key="client" element={<RoleRoute role="client" />}>
+    <Route path="/client" key="client" element={<RoleRoute role="client" />}>
       <Route element={<VerifiedRoute />}>
-        <Route path="/client" element={<ClientLayout />}>
+        <Route element={<ClientLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<ClientDashboard />} />
           <Route path="search" element={<FindJobseekers />} />
@@ -30,6 +30,8 @@ export default function ClientRoutes() {
           <Route path="notifications" element={<ClientNotifications />} />
           <Route path="settings" element={<ClientSettings />} />
           <Route path="help" element={<ClientHelp />} />
+          
+          {/* The dynamic route */}
           <Route path="jobseekers/:id" element={<JobseekerProfile />} />
         </Route>
       </Route>
