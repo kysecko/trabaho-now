@@ -1,159 +1,343 @@
-import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { 
-  MagnifyingGlassIcon, 
-  MapPinIcon, 
-  StarIcon, 
+import { useEffect, useState } from "react";
+import {
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  StarIcon,
   UserIcon,
   BoltIcon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
+import api from "../../api/client"; // adjust path to your client.js
+
+const TAGS = ["All work", "Plumber", "Electrician", "Carpentry", "Cleaning", "Appliance Repair"];
+const RATE_OPTIONS = [500, 800, 1000, 1500, 2000];
+const PER_PAGE = 9;
+const INITIAL_FILTERS = { service: "", barangay: "", date: "", maxRate: "" };
+
+const STATUS_STYLES = {
+  available: { label: "Available now", cls: "bg-green-50 text-green-600" },
+  busy: { label: "Busy", cls: "bg-amber-50 text-amber-600" },
+  unavailable: { label: "Unavailable", cls: "bg-gray-100 text-gray-500" },
+};
+
+function useDebounced(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
 
 export default function FindJobseekers() {
-  const { user } = useAuth();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounced(search);
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [page, setPage] = useState(1);
 
-  // Dummy data based on your screenshot
-  const jobseekers = [
-    { id: 1, name: "Mang Juan Santos", service: "Aircon Cleaning", status: "Available now", location: "Caypombo", rating: 4.5, rate: 600, avatar: "https://i.pravatar.cc/150?img=11" },
-    { id: 2, name: "Mang Juan Santos", service: "Aircon Cleaning", status: "Available now", location: "Caypombo", rating: 4.5, rate: 600, avatar: "https://i.pravatar.cc/150?img=11" },
-    { id: 3, name: "Mang Juan Santos", service: "Aircon Cleaning", status: "Available now", location: "Caypombo", rating: 4.5, rate: 600, avatar: "https://i.pravatar.cc/150?img=11" },
-  ];
+  const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [barangays, setBarangays] = useState([]);
+  const [availableCount, setAvailableCount] = useState(null);
+
+  // One-time: barangay options and "available today" count
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const [b, a] = await Promise.all([
+          api.get("/public/barangays"),
+          api.get("/public/jobseekers?available=1&per_page=1"),
+        ]);
+        if (ignore) return;
+        setBarangays(b?.data ?? []);
+        setAvailableCount(a?.meta?.total ?? 0);
+      } catch {
+        /* non-critical */
+      }
+    })();
+    return () => { ignore = true; };
+  }, []);
+
+  // Main list: refetch whenever search, filters, or page change
+  useEffect(() => {
+    let ignore = false;
+
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params = new URLSearchParams({
+          per_page: String(PER_PAGE),
+          page: String(page),
+          sort: "top_rated",
+        });
+        if (debouncedSearch.trim()) params.set("q", debouncedSearch.trim());
+        if (filters.service) params.set("service", filters.service);
+        if (filters.barangay) params.set("barangay", filters.barangay);
+        if (filters.date) params.set("date", filters.date);
+        if (filters.maxRate) params.set("max_rate", filters.maxRate);
+
+        const result = await api.get(`/public/jobseekers?${params}`);
+        if (ignore) return;
+
+        setItems(result?.data ?? []);
+        setTotal(result?.meta?.total ?? 0);
+        setLastPage(result?.meta?.last_page ?? 1);
+      } catch (err) {
+        if (!ignore) setError(err.message);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    })();
+
+    return () => { ignore = true; };
+  }, [debouncedSearch, filters, page]);
+
+  const updateFilter = (key, value) => {
+    setFilters((f) => ({ ...f, [key]: value }));
+    setPage(1);
+  };
+
+  const resetAll = () => {
+    setSearch("");
+    setFilters(INITIAL_FILTERS);
+    setPage(1);
+  };
+
+  const handleQuickHire = (id) => console.log("Quick hire:", id);   // e.g. navigate(`/client/requests/new?jobseeker=${id}`)
+  const handleViewProfile = (id) => console.log("View profile:", id); // e.g. navigate(`/client/jobseekers/${id}`)
 
   return (
     <main className="w-full space-y-6 pb-20">
-      {/* Welcome section */}
+      {/* Header */}
       <section className="max-w-3xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-7 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-navy">Find trusted local jobseekers</h1>
             <p className="mt-1 text-sm text-muted">
               Find the right person by skill, date, location, and rate—then send a request.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
-            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-            21 Available workers available today
-          </div>
+          {availableCount !== null && (
+            <div className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+              {availableCount} Available workers today
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Search Bar */}
-      <section className="flex flex-col sm:flex-row gap-3">
+      {/* Search bar */}
+      <form
+        className="flex flex-col gap-3 sm:flex-row"
+        onSubmit={(e) => e.preventDefault()}
+      >
         <div className="relative flex-1">
-          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="Search a job type. ( e.g. plumber, technician, aircon )" 
+          <MagnifyingGlassIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search a job type. ( e.g. plumber, technician, aircon )"
             className="w-full rounded-lg border border-gray-300 py-3 pl-11 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
-        <button className="rounded-lg bg-[#ff4d00] px-8 py-3 text-sm font-semibold text-white transition hover:bg-orange-600">
+        <button
+          type="submit"
+          className="rounded-lg bg-[#ff4d00] px-8 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+        >
           Search
         </button>
-      </section>
+      </form>
 
-      {/* Filter Tags */}
+      {/* Category tags */}
       <section className="flex flex-wrap gap-2">
-        {["All work", "Plumber", "Electrician", "Carpentry", "Cleaning", "Appliance Repair"].map((tag, index) => (
-          <button 
-            key={tag}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-              index === 0 
-                ? "border-[#ff4d00] bg-[#ff4d00] text-white" 
-                : "border-gray-300 bg-white text-navy hover:border-navy"
-            }`}
-          >
-            {tag}
-          </button>
-        ))}
+        {TAGS.map((tag, index) => {
+          const value = index === 0 ? "" : tag;
+          const active = filters.service === value;
+          return (
+            <button
+              key={tag}
+              onClick={() => updateFilter("service", value)}
+              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+                active
+                  ? "border-[#ff4d00] bg-[#ff4d00] text-white"
+                  : "border-gray-300 bg-white text-navy hover:border-navy"
+              }`}
+            >
+              {tag}
+            </button>
+          );
+        })}
       </section>
 
-      {/* Filter Bar */}
+      {/* Filters */}
       <section className="rounded-xl border border-gray-200 bg-white p-4">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+        <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
           <div className="flex items-center gap-2 font-semibold text-navy">
             <AdjustmentsHorizontalIcon className="h-5 w-5 text-[#ff4d00]" />
             Filter Workers By:
           </div>
-          <button className="text-sm font-medium text-gray-500 hover:text-navy">
+          <button onClick={resetAll} className="text-sm font-medium text-gray-500 hover:text-navy">
             Reset all filters
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-500">Barangay Location:</label>
-            <select className="w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700">
-              <option>Select a barangay</option>
+            <select
+              value={filters.barangay}
+              onChange={(e) => updateFilter("barangay", e.target.value)}
+              className="w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700"
+            >
+              <option value="">All barangays</option>
+              {barangays.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
             </select>
           </div>
+
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-500">Availability / Date:</label>
-            <input type="date" className="w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700" />
+            <input
+              type="date"
+              value={filters.date}
+              min={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => updateFilter("date", e.target.value)}
+              className="w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700"
+            />
           </div>
+
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-500">Daily Budget / Rate:</label>
-            <select className="w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700">
-              <option>Select amount</option>
+            <select
+              value={filters.maxRate}
+              onChange={(e) => updateFilter("maxRate", e.target.value)}
+              className="w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700"
+            >
+              <option value="">Any amount</option>
+              {RATE_OPTIONS.map((r) => (
+                <option key={r} value={r}>Up to ₱{r.toLocaleString("en-PH")}</option>
+              ))}
             </select>
           </div>
         </div>
       </section>
 
-      {/* Results Header */}
+      {/* Results header */}
       <div className="text-lg font-bold text-navy">
-        7 jobseekers found in <span className="text-[#ff4d00]">Sta. Maria</span>
+        {loading ? "Searching..." : `${total} jobseeker${total === 1 ? "" : "s"} found in`}{" "}
+        {!loading && <span className="text-[#ff4d00]">Sta. Maria</span>}
       </div>
 
-      {/* Jobseeker Cards Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {jobseekers.map((person) => (
-          <div key={person.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition">
-            
-            {/* Header: Avatar & Info */}
-            <div className="flex items-start gap-3">
-              <img src={person.avatar} alt={person.name} className="h-14 w-14 rounded-full object-cover border border-gray-200" />
-              <div>
-                <h3 className="font-bold text-navy flex items-center gap-1">
-                  {person.name}
-                </h3>
-                <p className="text-xs text-gray-500">{person.service}</p>
-                <div className="mt-1 inline-flex items-center gap-1 rounded bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
-                  {person.status}
+      {error && <p className="text-sm text-red-500">{error}</p>}
+
+      {!loading && !error && items.length === 0 && (
+        <p className="text-sm text-muted">No jobseekers match your search. Try removing a filter.</p>
+      )}
+
+      {/* Cards */}
+      <section
+        className={`grid grid-cols-1 gap-5 transition-opacity md:grid-cols-2 lg:grid-cols-3 ${
+          loading ? "opacity-50" : ""
+        }`}
+      >
+        {items.map((person) => {
+          const status = STATUS_STYLES[person.availability_status] ?? STATUS_STYLES.unavailable;
+          return (
+            <div
+              key={person.id}
+              className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+            >
+              <div className="flex items-start gap-3">
+                {person.photo_url ? (
+                  <img
+                    src={person.photo_url}
+                    alt={person.name}
+                    className="h-14 w-14 rounded-full border border-gray-200 object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-lg font-bold text-navy">
+                    {person.name?.[0] ?? "?"}
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-bold text-navy">{person.name}</h3>
+                  <p className="text-xs text-gray-500">{person.service ?? "Service Provider"}</p>
+                  <div className={`mt-1 inline-flex rounded px-2 py-0.5 text-[10px] font-bold ${status.cls}`}>
+                    {status.label}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Location & Rating */}
-            <div className="mt-4 flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1 text-gray-600">
-                <MapPinIcon className="h-4 w-4" />
-                {person.location}
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <div className="flex items-center gap-1 text-gray-600">
+                  <MapPinIcon className="h-4 w-4" />
+                  {person.barangay ?? "Sta. Maria"}
+                </div>
+                <div className="flex items-center gap-1 font-bold text-navy">
+                  {person.rating} <StarIcon className="h-4 w-4 text-yellow-400" />
+                </div>
               </div>
-              <div className="flex items-center gap-1 font-bold text-navy">
-                {person.rating} <StarIcon className="h-4 w-4 text-yellow-400" />
+
+              <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+                <span className="text-sm text-gray-500">Standard Rate</span>
+                {person.rate != null ? (
+                  <span className="text-lg font-bold text-navy">
+                    ₱{Number(person.rate).toLocaleString("en-PH")}{" "}
+                    <span className="text-xs font-normal text-gray-500">/ {person.rate_unit ?? "job"}</span>
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-400">Not set</span>
+                )}
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => handleViewProfile(person.id)}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 py-2 text-sm font-semibold text-navy transition hover:bg-gray-50"
+                >
+                  <UserIcon className="h-4 w-4" /> View Full Profile
+                </button>
+                <button
+                  onClick={() => handleQuickHire(person.id)}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#ff4d00] py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+                >
+                  <BoltIcon className="h-4 w-4" /> Quick hire
+                </button>
               </div>
             </div>
-
-            {/* Rate */}
-            <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-              <span className="text-sm text-gray-500">Standard Rate</span>
-              <span className="text-lg font-bold text-navy">₱{person.rate} <span className="text-xs font-normal text-gray-500">/ job</span></span>
-            </div>
-
-            {/* Actions */}
-            <div className="mt-4 flex gap-2">
-              <button className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-gray-300 py-2 text-sm font-semibold text-navy hover:bg-gray-50 transition">
-                <UserIcon className="h-4 w-4" /> View Full Profile
-              </button>
-              <button className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#ff4d00] py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">
-                <BoltIcon className="h-4 w-4" /> Quick hire
-              </button>
-            </div>
-            
-          </div>
-        ))}
+          );
+        })}
       </section>
+
+      {/* Pagination */}
+      {lastPage > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            disabled={page <= 1 || loading}
+            onClick={() => setPage((p) => p - 1)}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-navy disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-500">Page {page} of {lastPage}</span>
+          <button
+            disabled={page >= lastPage || loading}
+            onClick={() => setPage((p) => p + 1)}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-navy disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </main>
   );
 }
