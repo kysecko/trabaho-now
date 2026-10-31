@@ -53,7 +53,7 @@ export default function WelcomeModal() {
         className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl sm:p-8"
       >
         <h2 id="welcome-title" className="text-2xl font-bold text-navy">
-          Welcome to TrabahoNow
+          Welcome to Trabaho<span className="text-primary">Now</span>🎉
         </h2>
         <p className="mt-1 text-sm text-muted">
           How would you like to use your account? You can change your mind anytime.

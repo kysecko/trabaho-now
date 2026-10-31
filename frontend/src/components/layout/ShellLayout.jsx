@@ -63,7 +63,7 @@ export default function ShellLayout({ title, links }) {
     };
   }, [isMoreMenuOpen, isLogoutModalOpen]);
 
-  const handleLogoutConfirm = async () => {
+  const handleConfirmLogout = async () => {
     setIsMoreMenuOpen(false);
     setIsLogoutModalOpen(false);
     try {
@@ -88,14 +88,12 @@ export default function ShellLayout({ title, links }) {
       aria-label={link.label}
       className={({ isActive }) =>
         mobile
-          ? `flex h-full w-full min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
-              isActive ? "text-[#ff4d00]" : "text-gray-400 hover:text-white"
-            }`
-          : `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
-              isActive
-                ? "bg-[#ff4d00] text-white shadow-lg shadow-orange-500/20"
-                : "text-gray-300 hover:bg-[#2b2b40] hover:text-white"
-            }`
+          ? `flex h-full w-full min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${isActive ? "text-[#ff4d00]" : "text-gray-400 hover:text-white"
+          }`
+          : `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${isActive
+            ? "bg-[#ff4d00] text-white shadow-lg shadow-orange-500/20"
+            : "text-gray-300 hover:bg-[#2b2b40] hover:text-white"
+          }`
       }
     >
       {({ isActive }) => (
@@ -144,7 +142,7 @@ export default function ShellLayout({ title, links }) {
           </span>
         </div>
 
-        <nav aria-label="Main navigation" className="flex-1 space-y-2 overflow-y-auto px-4 py-5">
+        <nav aria-label="Main navigation" className="sidebar-scroll flex-1 space-y-2 overflow-y-auto px-4 py-5">
           {links.map((link) => renderLink(link))}
         </nav>
 
@@ -163,10 +161,10 @@ export default function ShellLayout({ title, links }) {
 
       {/* MAIN APPLICATION */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        
+
         {/* TOP HEADER */}
         <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
-          
+
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <span className="hidden sm:inline">{title}</span>
@@ -210,11 +208,10 @@ export default function ShellLayout({ title, links }) {
           aria-label="Open more menu"
           aria-expanded={isMoreMenuOpen}
           aria-haspopup="dialog"
-          className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${
-            isMoreActive || isMoreMenuOpen
+          className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${isMoreActive || isMoreMenuOpen
               ? "text-[#ff4d00]"
               : "text-gray-400 hover:text-white"
-          }`}
+            }`}
         >
           <EllipsisHorizontalIcon className="h-6 w-6" aria-hidden="true" />
           <span className="text-[11px] font-medium leading-tight">More</span>
@@ -305,11 +302,11 @@ export default function ShellLayout({ title, links }) {
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
                 <ExclamationTriangleIcon className="h-7 w-7 text-red-600" aria-hidden="true" />
               </div>
-              
+
               <h3 id="logout-title" className="mt-4 text-lg font-bold text-gray-900">
                 Log out of your account?
               </h3>
-              
+
               <p className="mt-2 text-sm text-gray-500">
                 Are you sure you want to log out? You will need to enter your credentials again to access your dashboard.
               </p>
@@ -324,7 +321,7 @@ export default function ShellLayout({ title, links }) {
                 </button>
                 <button
                   type="button"
-                  onClick={handleLogoutConfirm}
+                  onClick={handleConfirmLogout}
                   className="w-full rounded-xl bg-[#ff4d00] px-4 py-2.5 text-sm font-semibold cursor-pointer text-white shadow-sm transition-colors hover:bg-primary-hover sm:w-auto"
                 >
                   Continue Logout
