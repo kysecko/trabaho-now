@@ -1,27 +1,16 @@
 import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   MagnifyingGlassIcon,
-  BriefcaseIcon,
   ClockIcon,
-  CalendarDaysIcon,
-  CheckCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 import Button from "../../components/ui/Button";
 import WelcomeModal from "../../components/shared/WelcomeModal";
-import AnalyticsCard from "../../components/ui/dashboard/AnalyticsCard";
 import JobseekerCard from "../../components/ui/dashboard/JobseekerCard";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/client";
-
-import { useNavigate } from "react-router-dom";
-
-const analytics = [
-  { id: 1, title: "Active Requests", value: 0, icon: BriefcaseIcon },
-  { id: 2, title: "Pending Requests", value: 0, icon: ClockIcon },
-  { id: 3, title: "Upcoming Requests", value: 0, icon: CalendarDaysIcon },
-  { id: 4, title: "Completed Services", value: 0, icon: CheckCircleIcon },
-];
 
 const toCardData = (j) => ({
   id: j.id,
@@ -35,10 +24,8 @@ const toCardData = (j) => ({
   verified: j.is_verified,
 });
 
-export default function ClientDashboard({ data = analytics }) {
-
+export default function ClientDashboard() {
   const navigate = useNavigate();
-
   const { user } = useAuth();
 
   const [jobseekers, setJobseekers] = useState([]);
@@ -70,14 +57,59 @@ export default function ClientDashboard({ data = analytics }) {
   }, []);
 
   const handleHire = (jobseekerId) => {
-    console.log("Hire:", jobseekerId);
-    // e.g. navigate(`/client/requests/new?jobseeker=${jobseekerId}`)
+    if (!user?.is_verified) {
+      navigate("/verify-identity"); 
+      return;
+    }
+    navigate(`/client/requests/new?jobseeker=${jobseekerId}`);
   };
 
   return (
     <>
-      <WelcomeModal />
+      <WelcomeModal /> 
+      
       <main className="w-full space-y-6">
+        
+        {/* 👇 VERIFICATION BANNERS (Made more aggressive) */}
+        
+        {/* Pending Banner */}
+        {user?.verification_status === 'pending' && (
+          <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+            <div className="flex items-start gap-3">
+              <ClockIcon className="h-6 w-6 shrink-0 text-yellow-600" />
+              <div>
+                <h3 className="font-bold text-yellow-800">Your ID is under review</h3>
+                <p className="text-sm text-yellow-700">
+                  Please wait 24-48 hours while our admin reviews your ID. You will be able to hire workers once approved.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Unverified Banner - Triggers if is_verified is strictly false */}
+        {user?.is_verified === false && user?.verification_status !== 'pending' && (
+          <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <ExclamationTriangleIcon className="h-6 w-6 shrink-0 text-orange-600" />
+                <div>
+                  <h3 className="font-bold text-orange-800">Verify your Identity</h3>
+                  <p className="text-sm text-orange-700">
+                    To ensure the safety of our community, you must verify your ID before hiring workers.
+                  </p>
+                </div>
+              </div>
+              <Link 
+                to="/verify-identity" 
+                className="shrink-0 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
+              >
+                Verify Now
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Welcome section */}
         <section className="max-w-3xl space-y-4">
           <div>
@@ -102,19 +134,7 @@ export default function ClientDashboard({ data = analytics }) {
           </Button>
         </section>
 
-        {/* Analytics section */}
-        <section>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {data.map((item) => (
-              <AnalyticsCard
-                key={item.id}
-                title={item.title}
-                value={item.value}
-                icon={item.icon}
-              />
-            ))}
-          </div>
-        </section>
+        {/* 👇 REMOVED THE ANALYTICS GRID HERE */}
 
         {/* Top recommended jobseekers */}
         <section>

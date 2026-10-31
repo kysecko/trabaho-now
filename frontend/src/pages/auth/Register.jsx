@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom"; // ADDED useNavigate
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { registerUser } from "../../api/auth";
 import { useAuth } from "../../context/AuthContext";
 import Field from "../../components/ui/Field";
 import { UserIcon, ShieldCheckIcon, EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 export default function Register() {
-  const { login } = useAuth(); // Removed 'user' since we navigate manually
+  const { login } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate(); // ADDED useNavigate
+  const navigate = useNavigate();
   const from = location.state?.from;
   
   const [showPassword, setShowPassword] = useState(false);
@@ -21,16 +21,22 @@ export default function Register() {
     password_confirmation: "",
     role: "client",
   });
+  const [agreeTerms, setAgreeTerms] = useState(false); // New state for checkbox
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-
-  // REMOVED the <Navigate> blocks that were here
 
   const first = (key) => errors[key]?.[0];
   const update = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation for checkbox
+    if (!agreeTerms) {
+      setErrors({ form: ["You must agree to the Terms and Privacy Policy to create an account."] });
+      return;
+    }
+
     setSubmitting(true);
     setErrors({});
 
@@ -40,10 +46,7 @@ export default function Register() {
       const userData = response.user || response.data?.user;
 
       if (token) {
-        // login() stores the token and sets the user state
         login(token, userData);
-        
-        
         navigate("/verify", { replace: true, state: { email: userData.email } });
       } else {
         setErrors({ form: ["Registration succeeded, but no token was returned."] });
@@ -92,9 +95,7 @@ export default function Register() {
               onClick={() => setShowPassword(!showPassword)}
               className="text-muted hover:text-navy"
             >
-              {showPassword
-                ? <EyeIcon className="w-5 h-5" />
-                : <EyeSlashIcon className="w-5 h-5" />}
+              {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
             </button>
           }
         />
@@ -114,18 +115,33 @@ export default function Register() {
             </button>
           }
         />
-        <p className="text-center text-xs text-muted">
-          By creating an account, you agree to our{" "} <Link to="/terms" className="font-semibold text-primary hover:underline">Terms Condition</Link> and {" "}
-          <Link to="/privacy" className="font-semibold text-primary hover:underline">
-            Privacy Policy {" "}
-          </Link>
-          of TrabahoNow.
-        </p>
+
+        {/* ADDED CHECKBOX HERE */}
+        <div className="flex items-end gap-2 pt-2">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={agreeTerms}
+            onChange={(e) => setAgreeTerms(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+          />
+          <label htmlFor="terms" className="text-xs text-gray-600 leading-snug cursor-pointer">
+            I agree to the{" "}
+            <Link to="/terms" className="font-semibold text-primary hover:underline">
+              Terms and Conditions
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" className="font-semibold text-primary hover:underline">
+              Privacy Policy
+            </Link>{" "}
+            of TrabahoNow.
+          </label>
+        </div>
 
         <button
           type="submit"
-          disabled={submitting}
-          className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60"
+          disabled={submitting || !agreeTerms} // Disabled if not checked
+          className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {submitting ? "Creating account..." : "Create account"}
         </button>

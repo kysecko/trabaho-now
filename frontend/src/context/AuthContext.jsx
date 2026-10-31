@@ -22,15 +22,21 @@ export function AuthProvider({ children }) {
     }
     refreshUser()
       .catch((err) => {
-        
         if (err.status === 401) localStorage.removeItem("token");
       })
       .finally(() => setLoading(false));
   }, [refreshUser]);
 
-  const login = (token, user) => {
+  // 👇 UPDATED LOGIN FUNCTION
+  const login = async (token, user) => {
     localStorage.setItem("token", token);
-    setUser(user);
+    setUser(user); // Set the initial user
+    try {
+      // Fetch the complete user data from the database to ensure is_verified is accurate
+      await refreshUser(); 
+    } catch (e) {
+      console.error("Failed to sync user data:", e);
+    }
   };
 
   const logout = () => {
