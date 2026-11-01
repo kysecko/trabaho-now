@@ -92,6 +92,7 @@ export default function VerifyEmail() {
   const [resending, setResending] = useState(false);
 
   const autoSent = useRef(false);
+  const hasNavigated = useRef(false); // 👇 FIX: Use a ref to prevent multiple navigations
 
   const handleSendCode = async () => {
     setError("");
@@ -124,13 +125,23 @@ export default function VerifyEmail() {
     handleSendCode();
   }, [loading, user]);
 
+  // 👇 FIX: Handle the redirect in a useEffect to prevent render crashes
+  useEffect(() => {
+    if (!loading && user?.email_verified_at && !hasNavigated.current) {
+      hasNavigated.current = true;
+      navigate(`/${user.role}/dashboard`, { replace: true });
+    }
+  }, [loading, user, navigate]);
+
   if (loading) return null;
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  // If the user has already verified their email, redirect them immediately.
   if (user.email_verified_at) {
+    // Use a timeout or the useEffect pattern we discussed earlier if this still loops
     return <Navigate to={`/${user.role}/dashboard`} replace />;
   }
 
@@ -145,7 +156,7 @@ export default function VerifyEmail() {
     try {
       await verifyOtp(code);
       await refreshUser();
-      navigate(`/${user.role}/dashboard`, { replace: true });
+      // The useEffect above will handle the navigation once the user state updates
     } catch (err) {
       setError(
         "That code didn't work. It may be incorrect or expired. Check the code and try again, or tap \"Click to resend\" to get a new one."
