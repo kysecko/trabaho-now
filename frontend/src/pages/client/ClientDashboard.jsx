@@ -58,7 +58,7 @@ export default function ClientDashboard() {
 
   const handleHire = (jobseekerId) => {
     if (!user?.is_verified) {
-      navigate("/verify-identity");
+      navigate("/verify");
       return;
     }
     navigate(`/client/requests/new?jobseeker=${jobseekerId}`);
@@ -125,7 +125,7 @@ export default function ClientDashboard() {
                 </div>
               </div>
               <Link
-                to="/verify-identity"
+                to="/verify"
                 className="shrink-0 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
               >
                 Verify Now
