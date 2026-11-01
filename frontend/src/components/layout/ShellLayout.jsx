@@ -15,7 +15,9 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
-export default function ShellLayout({ title, links }) {
+import ProfileMenu from "../ui/ProfileMenu";
+
+export default function ShellLayout({ title, links, profileLink }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -173,17 +175,15 @@ export default function ShellLayout({ title, links }) {
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-4">
-            {/* User Profile Info (No Bell/Date) */}
-            <div className="flex items-center gap-2 py-1">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#ff4d00] text-sm font-semibold text-white">
-                {userInitial}
-              </div>
-              <span className="hidden max-w-36 truncate text-sm font-medium text-gray-700 md:block">
-                {user?.name || "User"}
-              </span>
-            </div>
-          </div>
+          <ProfileMenu
+            user={user}
+            onLogout={() => setIsLogoutModalOpen(true)}
+            items={
+              profileLink
+                ? [{ label: "My profile", to: profileLink }]
+                : []
+            }
+          />
         </header>
 
         {/* PAGE CONTENT */}
@@ -209,8 +209,8 @@ export default function ShellLayout({ title, links }) {
           aria-expanded={isMoreMenuOpen}
           aria-haspopup="dialog"
           className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-1 transition-colors ${isMoreActive || isMoreMenuOpen
-              ? "text-[#ff4d00]"
-              : "text-gray-400 hover:text-white"
+            ? "text-[#ff4d00]"
+            : "text-gray-400 hover:text-white"
             }`}
         >
           <EllipsisHorizontalIcon className="h-6 w-6" aria-hidden="true" />

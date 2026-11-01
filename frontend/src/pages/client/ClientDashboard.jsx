@@ -58,7 +58,7 @@ export default function ClientDashboard() {
 
   const handleHire = (jobseekerId) => {
     if (!user?.is_verified) {
-      navigate("/verify-identity"); 
+      navigate("/verify-identity");
       return;
     }
     navigate(`/client/requests/new?jobseeker=${jobseekerId}`);
@@ -66,12 +66,36 @@ export default function ClientDashboard() {
 
   return (
     <>
-      <WelcomeModal /> 
-      
+      <WelcomeModal />
+
       <main className="w-full space-y-6">
-        
+
+        {/* Welcome section */}
+        <section className="max-w-3xl space-y-4">
+          <div>
+            <h1 className="text-2xl font-bold text-navy">
+              Kumusta 👋, {user?.name || "there"}! Let's get your first job done.
+            </h1>
+
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              Trabaho Now connects you with trusted workers in Sta. Maria and
+              nearby towns, from painters to plumbers. Your account is ready,
+              and everything starts with your first request.
+            </p>
+          </div>
+
+          <Button
+            type="button"
+            onClick={() => navigate("/client/search")}
+            leftIcon={MagnifyingGlassIcon}
+            variant="primary"
+          >
+            Browse Jobseekers
+          </Button>
+        </section>
+
         {/* 👇 FORCED VERIFICATION BANNERS */}
-        
+
         {/* Pending Banner */}
         {user?.verification_status === 'pending' && (
           <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
@@ -100,8 +124,8 @@ export default function ClientDashboard() {
                   </p>
                 </div>
               </div>
-              <Link 
-                to="/verify-identity" 
+              <Link
+                to="/verify-identity"
                 className="shrink-0 rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
               >
                 Verify Now
@@ -110,29 +134,6 @@ export default function ClientDashboard() {
           </div>
         )}
 
-        {/* Welcome section */}
-        <section className="max-w-3xl space-y-4">
-          <div>
-            <h1 className="text-2xl font-bold text-navy">
-              Kumusta 👋, {user?.name || "there"}! Let's get your first job done.
-            </h1>
-
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Trabaho Now connects you with trusted workers in Sta. Maria and
-              nearby towns, from painters to plumbers. Your account is ready,
-              and everything starts with your first request.
-            </p>
-          </div>
-
-          <Button
-            type="button"
-            onClick={() => navigate("/client/search")}
-            leftIcon={MagnifyingGlassIcon}
-            variant="primary"
-          >
-            Browse Jobseekers
-          </Button>
-        </section>
 
         {/* Top recommended jobseekers */}
         <section>

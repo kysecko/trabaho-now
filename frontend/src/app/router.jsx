@@ -1,5 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import Placeholder from "../components/ui/Placeholder";
 
 // Layouts
 import PublicLayout from "../components/layout/PublicLayout";
@@ -29,6 +28,10 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import ClientRoutes from "./routes/clientRoutes";
 import JobseekerRoutes from "./routes/jobseekerRoutes";
 import AdminRoutes from "./routes/adminRoutes";
+
+// Error Pages
+import NotFound from "../pages/404NotFound";
+
 
 // 👇 CHANGE TO export default
 export default function AppRouter() {
@@ -67,7 +70,7 @@ export default function AppRouter() {
       </Route>
 
       {/* error 404 */}
-      <Route path="*" element={<Placeholder title="Page not found" />} />
+       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

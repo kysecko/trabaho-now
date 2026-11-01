@@ -1,1 +1,7 @@
-export default function ClientSettings() { return <div className='p-6'><h1 className='text-2xl font-bold'>ClientSettings</h1></div>; }
+export default function ClientSettings() {
+    return (
+        <main className="w-full space-y-6">
+            <h1 className="text-2xl font-bold mb-6 text-gray-800">Settings</h1>
+        </main>
+    );
+}
