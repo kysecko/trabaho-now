@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, [refreshUser]);
 
-  // 👇 UPDATED LOGIN FUNCTION
+  // UPDATED LOGIN FUNCTION
   const login = async (token, user) => {
     localStorage.setItem("token", token);
     setUser(user); // Set the initial user
