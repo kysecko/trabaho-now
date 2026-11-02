@@ -12,8 +12,7 @@ const links = [
 ];
 
 const linkClass = ({ isActive }) =>
-  `text-sm font-medium transition-colors hover:text-primary ${
-    isActive ? "text-primary" : "text-ink"
+  `text-sm font-medium transition-colors hover:text-primary ${isActive ? "text-primary" : "text-ink"
   }`;
 
 export default function PublicNavbar() {
@@ -76,9 +75,8 @@ export default function PublicNavbar() {
 
           {/* Links + actions */}
           <div
-            className={`${
-              open ? "flex" : "hidden"
-            } absolute left-0 right-0 top-full flex-col gap-4 border-b border-line bg-white px-4 py-5 shadow-card sm:px-6 md:static md:flex md:flex-1 md:flex-row md:items-center md:gap-6 md:border-0 md:bg-transparent md:p-0 md:shadow-none`}
+            className={`${open ? "flex" : "hidden"
+              } absolute left-0 right-0 top-full flex-col gap-4 border-b border-line bg-white px-4 py-5 shadow-card sm:px-6 md:static md:flex md:flex-1 md:flex-row md:items-center md:gap-6 md:border-0 md:bg-transparent md:p-0 md:shadow-none`}
           >
             <ul className="flex flex-col gap-4 md:mx-auto md:flex-row md:gap-8">
               {links.map((l) => (
@@ -94,9 +92,31 @@ export default function PublicNavbar() {
               <Link
                 to={user ? `/${user.role}` : "/login"}
                 onClick={close}
-                className="inline-flex items-center justify-center rounded-lg border border-line bg-white px-5 py-2.5 text-sm font-semibold text-brand-blue transition hover:bg-page"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-4 py-2 transition hover:bg-page"
               >
-                {user ? "My account" : "Log in"}
+                {user ? (
+                  <>
+                    {user.avatar || user.photo_url ? (
+                      <img
+                        src={user.avatar || user.photo_url}
+                        alt={user.name || "Profile"}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                        {user.name?.trim()?.charAt(0)?.toUpperCase() || "U"}
+                      </span>
+                    )}
+
+                    <span className="text-sm font-semibold text-navy">
+                      {user.name || "My account"}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm font-semibold text-brand-blue">
+                    Log in
+                  </span>
+                )}
               </Link>
 
               {!installed && (
