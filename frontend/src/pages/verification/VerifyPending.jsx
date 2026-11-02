@@ -16,7 +16,7 @@ export default function VerifyPending() {
           Your documents have been submitted successfully. Our team will review your application within 24-48 hours.
         </p>
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/client/dashboard')}
           className="w-full bg-[#ff4d00] hover:bg-[#e64500] text-white font-bold py-3 rounded-xl transition-colors cursor-pointer"
         >
           Return to Dashboard
