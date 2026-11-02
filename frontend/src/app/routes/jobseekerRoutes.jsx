@@ -7,6 +7,7 @@ import JobseekerDashboard from "../../pages/jobseeker/JobseekerDashboard";
 import MyJobPost from "../../pages/jobseeker/MyJobPost";
 import BookingRequests from "../../pages/jobseeker/BookingRequests"; 
 import JobseekerTransactions from "../../pages/jobseeker/JobseekerTransactions";
+import JobseekerCalendar from "../../pages/jobseeker/JobseekerCalendar";
 import JobseekerReviews from "../../pages/jobseeker/JobseekerReviews";
 import JobseekerSettings from "../../pages/jobseeker/JobseekerSettings";
 import JobseekerHelp from "../../pages/jobseeker/JobseekerHelp";
@@ -21,6 +22,7 @@ export default function JobseekerRoutes() {
         <Route path="services" element={<MyJobPost />} />
         <Route path="requests" element={<BookingRequests />} />
         <Route path="transactions" element={<JobseekerTransactions />} />
+        <Route path="calendar" element={<JobseekerCalendar />} />
         <Route path="reviews" element={<JobseekerReviews />} />
         <Route path="notifications" element={<JobseekerNotifications />} />
         <Route path="settings" element={<JobseekerSettings />} />
