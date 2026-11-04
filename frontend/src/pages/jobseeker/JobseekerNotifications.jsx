@@ -3,14 +3,12 @@ import { BellIcon, BriefcaseIcon, BanknotesIcon, ShieldCheckIcon } from "@heroic
 
 const TYPES = {
   booking: { label: "Bookings", icon: BriefcaseIcon, tone: "bg-blue-50 text-blue-600" },
-  payment: { label: "Payments", icon: BanknotesIcon, tone: "bg-green-50 text-green-600" },
   system: { label: "System", icon: ShieldCheckIcon, tone: "bg-orange-50 text-[#ff4d00]" },
 };
 
 const MOCK_NOTIFS = [
   { id: 1, type: "system", title: "Welcome to your Worker Dashboard", body: "Your account is verified. Add a service post to start appearing in searches.", time: "Just now", read: false },
   { id: 2, type: "booking", title: "New Job Request", body: "Maria Santos wants to book you for 'Fix leaking roof'.", time: "2 hours ago", read: false },
-  { id: 3, type: "payment", title: "Payment Received", body: "You received ₱800 for 'Aircon Repair'.", time: "Yesterday", read: true },
 ];
 
 export default function JobseekerNotifications() {
