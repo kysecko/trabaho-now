@@ -5,8 +5,6 @@ import {
     UserIcon,
     AdjustmentsHorizontalIcon,
     PaperAirplaneIcon,
-    XMarkIcon,
-    ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import {
     MapPinIcon,
@@ -18,6 +16,7 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../api/client";
 import Button from "../../components/ui/Button";
 import Field from "../../components/ui/Field";
+import VerifyRequiredModal from "../../components/ui/VerifyRequiredModal"; // NEW: shared modal
 
 const TAGS = [
     "All", "Plumber", "Electrician", "Home Cleaning", "Carpentry", 
@@ -96,8 +95,13 @@ export default function FindJobseekers() {
     const [barangays, setBarangays] = useState([]);
     const [availableCount, setAvailableCount] = useState(null);
 
-    // NEW: State for the verification modal
+    // Controls the shared verification modal
     const [showVerifyModal, setShowVerifyModal] = useState(false);
+
+    // Same rule as the dashboard, so both pages behave the same way
+    const isVerified =
+        user?.is_verified === true || user?.verification_status === "approved";
+    const isPending = user?.verification_status === "pending";
 
     useEffect(() => {
         let ignore = false;
@@ -164,8 +168,6 @@ export default function FindJobseekers() {
     };
 
     const handleQuickHire = (id) => {
-        const isVerified = user?.is_verified === true || user?.verification_status === 'approved';
-        
         if (!isVerified) {
             setShowVerifyModal(true);
             return;
@@ -377,53 +379,12 @@ export default function FindJobseekers() {
                 </div>
             )}
 
-            {/* Verification Modal */}
-            {showVerifyModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div 
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-                        onClick={() => setShowVerifyModal(false)}
-                    ></div>
-
-                    <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                        <button 
-                            onClick={() => setShowVerifyModal(false)}
-                            className="absolute right-4 top-4 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
-                        >
-                            <XMarkIcon className="h-5 w-5" />
-                        </button>
-
-                        <div className="flex flex-col items-center text-center">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 mb-4">
-                                <ExclamationTriangleIcon className="h-8 w-8 text-[#ff4d00]" />
-                            </div>
-                            
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                Verification Required
-                            </h3>
-                            
-                            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                                To ensure the safety and security of our community, you must verify your identity before hiring workers or sending booking requests.
-                            </p>
-
-                            <div className="flex w-full gap-3">
-                                <button
-                                    onClick={() => setShowVerifyModal(false)}
-                                    className="flex-1 rounded-xl border border-gray-300 bg-white py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => navigate('/verify')}
-                                    className="flex-1 rounded-xl bg-[#ff4d00] py-2.5 text-sm font-bold text-white hover:bg-[#e64500] transition cursor-pointer"
-                                >
-                                    Get Verified
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Shared verification modal (same one used on the dashboard) */}
+            <VerifyRequiredModal
+                open={showVerifyModal}
+                onClose={() => setShowVerifyModal(false)}
+                pending={isPending}
+            />
         </main>
     );
 }

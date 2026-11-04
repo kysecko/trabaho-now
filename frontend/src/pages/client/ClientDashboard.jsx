@@ -8,6 +8,7 @@ import {
 
 import Button from "../../components/ui/Button";
 import WelcomeModal from "../../components/ui/WelcomeModal";
+import VerifyRequiredModal from "../../components/ui/VerifyRequiredModal"; // NEW
 import JobseekerCard from "../../components/ui/dashboard/JobseekerCard";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/client";
@@ -31,6 +32,14 @@ export default function ClientDashboard() {
   const [jobseekers, setJobseekers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // NEW: controls the "Verification Required" modal
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+
+  // Same rule as the Find Jobseekers page, so both behave the same way
+  const isVerified =
+    user?.is_verified === true || user?.verification_status === "approved";
+  const isPending = user?.verification_status === "pending";
 
   useEffect(() => {
     let ignore = false;
@@ -56,9 +65,11 @@ export default function ClientDashboard() {
     };
   }, []);
 
+  // CHANGED: unverified users now see the modal first instead of being
+  // sent straight to /verify. They only go to /verify from the modal.
   const handleHire = (jobseekerId) => {
-    if (!user?.is_verified) {
-      navigate("/verify");
+    if (!isVerified) {
+      setShowVerifyModal(true);
       return;
     }
     navigate(`/client/requests/new?jobseeker=${jobseekerId}`);
@@ -67,6 +78,12 @@ export default function ClientDashboard() {
   return (
     <>
       <WelcomeModal />
+
+      <VerifyRequiredModal
+        open={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        pending={isPending}
+      />
 
       <main className="w-full space-y-6">
 
@@ -94,10 +111,10 @@ export default function ClientDashboard() {
           </Button>
         </section>
 
-        {/* 👇 FORCED VERIFICATION BANNERS */}
+        {/* FORCED VERIFICATION BANNERS */}
 
         {/* Pending Banner */}
-        {user?.verification_status === 'pending' && (
+        {isPending && (
           <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
             <div className="flex items-start gap-3">
               <ClockIcon className="h-6 w-6 shrink-0 text-yellow-600" />
@@ -111,8 +128,8 @@ export default function ClientDashboard() {
           </div>
         )}
 
-        {/* Unverified Banner - Using !user?.is_verified to catch null/undefined too */}
-        {!user?.is_verified && user?.verification_status !== 'pending' && (
+        {/* Unverified Banner - catches null/undefined too */}
+        {!isVerified && !isPending && (
           <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
             <div className="flex flex-col items-center sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">
