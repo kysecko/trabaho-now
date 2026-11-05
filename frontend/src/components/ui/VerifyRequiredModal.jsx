@@ -6,13 +6,6 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 
-/**
- * Shown when an unverified client tries to hire (Quick hire).
- * - Not verified yet  -> "Verification Required" with Cancel / Get Verified
- * - ID already pending -> "Verification in progress" with a single Okay button
- *
- * Put it at: src/components/ui/VerifyRequiredModal.jsx
- */
 export default function VerifyRequiredModal({ open, onClose, pending = false }) {
   const navigate = useNavigate();
 
