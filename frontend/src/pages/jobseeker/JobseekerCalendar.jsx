@@ -97,7 +97,7 @@ const fmtTime = (t) => {
 };
 const fmtShort = (t) => {
   const [h, m] = t.split(":").map(Number);
-  return `${h % 12 || 12}${m ? `:${pad(m)}` : ""}${h >= 12 ? "p" : "a"}`;
+  return `${h % 12 || 12}${m ? `:${pad(m)}` : ""}${h >= 12 ? "pm" : "am"}`;
 };
 const dayLabel = (d, today) => {
   const diff = Math.round((startOfDay(d) - today) / 86400000);
@@ -146,6 +146,16 @@ function AddAvailabilityModal({ today, initialKey, eventsByDay, onClose, onSave 
   const [start, setStart] = useState(DEFAULT_START);
   const [end, setEnd] = useState(DEFAULT_END);
   const [note, setNote] = useState("");
+  const formRef = useRef(null);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    formRef.current?.focus();
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
@@ -204,11 +214,13 @@ function AddAvailabilityModal({ today, initialKey, eventsByDay, onClose, onSave 
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <form
+        ref={formRef}
+        tabIndex={-1}
         onSubmit={submit}
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-availability-title"
-        className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-6"
+        className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl outline-none bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-6"
       >
         <button
           type="button"
@@ -359,6 +371,7 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
   const [modalOpen, setModalOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const noticeTimer = useRef(null);
+  const panelRef = useRef(null);
 
   // schedule: { "2026-11-06": { status, start, end, note } }
   const [schedule, setSchedule] = useState(() => ({
@@ -428,6 +441,12 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
       setMonth(new Date(d.getFullYear(), d.getMonth(), 1));
     }
   };
+  // When the day panel sits below the grid (screens narrower than xl), bring it into view
+  const scrollToPanel = () => {
+    if (!window.matchMedia("(max-width: 1279px)").matches) return;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(() => panelRef.current?.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "nearest" }));
+  };
   const shiftMonth = (n) => setMonth(new Date(month.getFullYear(), month.getMonth() + n, 1));
   const goToday = () => {
     setMonth(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -467,7 +486,7 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
     : "No availability set";
 
   return (
-    <main className="w-full space-y-6">
+    <div className="space-y-6 ">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -494,7 +513,7 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* Month grid */}
         <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-4 sm:px-5">
@@ -522,12 +541,12 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
             ))}
           </div>
 
-          <div className="grid grid-cols-7">
+          <div className="-mb-px -mr-px grid grid-cols-7">
             {cells.map((d) => {
               const key = toKey(d);
               const inMonth = d.getMonth() === month.getMonth();
-              const evs = eventsByDay[key] ?? [];
-              const eff = effective(key);
+              const evs = inMonth ? eventsByDay[key] ?? [] : [];
+              const eff = inMonth ? effective(key) : null;
               const st = eff ? STATUS[eff.status] : null;
               const isToday = key === todayKey;
               const isSel = key === selKey;
@@ -537,7 +556,10 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
                 <button
                   key={key}
                   type="button"
-                  onClick={() => selectDay(d)}
+                  onClick={() => {
+                    selectDay(d);
+                    scrollToPanel();
+                  }}
                   aria-pressed={isSel}
                   aria-current={isToday ? "date" : undefined}
                   aria-label={`${d.toLocaleDateString("en-PH", { month: "long", day: "numeric" })}, ${
@@ -546,11 +568,11 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
                   style={eff?.status === "dayoff" ? { backgroundImage: HATCH } : undefined}
                   className={`relative flex min-h-16 flex-col gap-1 overflow-hidden border-b border-r border-gray-100 p-1.5 pb-2 text-left transition focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-primary md:min-h-28 md:p-2 ${
                     st && eff.status !== "dayoff" ? st.cell : eff?.status === "dayoff" ? "" : inMonth ? "bg-white" : "bg-gray-50"
-                  } ${!inMonth ? "opacity-60" : ""} ${isSel ? "z-10 opacity-100 ring-2 ring-inset ring-primary" : "hover:brightness-95"}`}
+                  } ${isSel ? "z-10 ring-2 ring-inset ring-primary" : "hover:brightness-95"}`}
                 >
                   <span
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
-                      isToday ? "bg-primary text-white" : past ? "text-gray-400" : st ? st.num : inMonth ? "text-navy" : "text-gray-300"
+                      isToday ? "bg-primary text-white" : !inMonth ? "text-gray-300" : past ? "text-gray-400" : st ? st.num : "text-navy"
                     }`}
                   >
                     {d.getDate()}
@@ -568,10 +590,13 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
                     ))}
                     {evs.length > 2 && <span className="px-1 text-[11px] font-semibold text-muted">+{evs.length - 2} more</span>}
                     {evs.length === 0 && st && (
-                      <span className={`truncate px-1 text-[11px] font-semibold ${st.text}`}>
-                        {eff.status === "available" && validTimes(eff)
-                          ? `${fmtShort(eff.start)}–${fmtShort(eff.end)}`
-                          : st.label}
+                      <span className={`px-1 text-[11px] font-semibold leading-tight ${st.text}`}>
+                        {st.label}
+                        {eff.status === "available" && validTimes(eff) && (
+                          <span className="block truncate font-medium opacity-80">
+                            {fmtShort(eff.start)}–{fmtShort(eff.end)}
+                          </span>
+                        )}
                       </span>
                     )}
                   </div>
@@ -607,9 +632,9 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
         </section>
 
         {/* Side column */}
-        <div className="space-y-6">
+        <div className="grid items-start gap-6 md:grid-cols-2 xl:grid-cols-1">
           {/* Selected day */}
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <section ref={panelRef} className="scroll-mt-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-bold text-navy">
@@ -753,6 +778,6 @@ export default function JobseekerCalendar({ events = null, onViewDetails, onSche
       >
         {notice}
       </div>
-    </main>
+    </div>
   );
-}
+} 

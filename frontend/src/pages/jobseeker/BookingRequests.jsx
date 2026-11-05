@@ -7,18 +7,11 @@ import {
   CalendarDaysIcon,
   CheckCircleIcon,
   XCircleIcon,
-  BanknotesIcon,
   ExclamationTriangleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
 
-/* ------------------------------------------------------------------ */
-/* Demo requests. Replace with your API data via `initialRequests`:   */
-/*  { id, client, job, date: "2026-11-12", time, location,           */
-/*    severity: "emergency" | "scheduled", budget, message,           */
-/*    receivedMinsAgo, conflict (string or null) }                    */
-/* ------------------------------------------------------------------ */
 const daysFromNow = (n) => {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -57,7 +50,6 @@ const SEVERITY = {
   scheduled: { label: "Scheduled", badge: "bg-blue-100 text-blue-700" },
 };
 
-/* ---------------------------- helpers --------------------------- */
 const fromKey = (key) => {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
@@ -81,7 +73,6 @@ const SORT_FNS = {
   budget: (a, b) => b.budget - a.budget,
 };
 
-/* ------------------------- decline dialog ----------------------- */
 function DeclineModal({ request, onClose, onConfirm }) {
   const [reason, setReason] = useState("");
   const ref = useRef(null);
@@ -162,7 +153,6 @@ function DeclineModal({ request, onClose, onConfirm }) {
   );
 }
 
-/* --------------------------- request card ----------------------- */
 function RequestCard({ request: r, onAccept, onDecline }) {
   const sev = SEVERITY[r.severity] ?? SEVERITY.scheduled;
   const pending = r.status === "pending";
@@ -245,7 +235,6 @@ function RequestCard({ request: r, onAccept, onDecline }) {
   );
 }
 
-/* ------------------------------ page ---------------------------- */
 export default function BookingRequests({ initialRequests = null, onAccept, onDecline }) {
   const { user } = useAuth();
   const navigate = useNavigate();
