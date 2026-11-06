@@ -47,7 +47,7 @@ export default function Register() {
 
       if (token) {
         login(token, userData);
-        navigate("/verify", { replace: true, state: { email: userData.email } });
+        navigate("/login", { replace: true, state: { email: userData.email } });
       } else {
         setErrors({ form: ["Registration succeeded, but no token was returned."] });
       }
