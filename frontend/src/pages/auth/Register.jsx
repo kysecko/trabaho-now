@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { registerUser } from "../../api/auth";
-import { useAuth } from "../../context/AuthContext";
 import Field from "../../components/ui/Field";
-import { UserIcon, ShieldCheckIcon, EyeIcon, EyeSlashIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
+import {
+  UserIcon,
+  ShieldCheckIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  EnvelopeIcon,
+} from "@heroicons/react/24/outline";
 
 export default function Register() {
-  const { login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const from = location.state?.from;
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -21,7 +25,7 @@ export default function Register() {
     password_confirmation: "",
     role: "client",
   });
-  const [agreeTerms, setAgreeTerms] = useState(false); // New state for checkbox
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -30,10 +34,13 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation for checkbox
+
     if (!agreeTerms) {
-      setErrors({ form: ["You must agree to the Terms and Privacy Policy to create an account."] });
+      setErrors({
+        form: [
+          "You must agree to the Terms and Privacy Policy to create an account.",
+        ],
+      });
       return;
     }
 
@@ -42,18 +49,21 @@ export default function Register() {
 
     try {
       const response = await registerUser(form);
-      const token = response.token || response.data?.token;
-      const userData = response.user || response.data?.user;
 
-      if (token) {
-        login(token, userData);
-        navigate("/login", { replace: true, state: { email: userData.email } });
-      } else {
-        setErrors({ form: ["Registration succeeded, but no token was returned."] });
-      }
+      const email =
+        response?.user?.email ??
+        response?.data?.user?.email ??
+        form.email;
+
+      // Do NOT log in here. The user must verify their email, then log in.
+      navigate("/verify", { replace: true, state: { email } });
     } catch (err) {
       console.error("Registration Error:", err);
-      setErrors(err.errors || { form: [err.message || "An unexpected error occurred."] });
+      setErrors(
+        err.errors || {
+          form: [err.message || "An unexpected error occurred."],
+        }
+      );
     } finally {
       setSubmitting(false);
     }
@@ -62,9 +72,12 @@ export default function Register() {
   return (
     <div className="w-full">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-navy sm:text-3xl">Create your account.</h1>
+        <h1 className="text-2xl font-bold text-navy sm:text-3xl">
+          Create your account.
+        </h1>
         <p id="signup-subtitle" className="mt-2 text-sm text-muted">
-          Fill up the form to choose how you'd like to get started — find work or offer your services.
+          Fill up the form to choose how you'd like to get started — find work
+          or offer your services.
         </p>
       </div>
 
@@ -75,9 +88,26 @@ export default function Register() {
           </div>
         )}
 
-        <Field label="Full name" name="name" value={form.name} onChange={update} error={first("name")} required icon={<UserIcon className="w-4 h-4" />} />
+        <Field
+          label="Full name"
+          name="name"
+          value={form.name}
+          onChange={update}
+          error={first("name")}
+          required
+          icon={<UserIcon className="w-4 h-4" />}
+        />
 
-        <Field label="Email" name="email" type="email" value={form.email} onChange={update} error={first("email")} required icon={<EnvelopeIcon className="w-4 h-4" />} />
+        <Field
+          label="Email"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={update}
+          error={first("email")}
+          required
+          icon={<EnvelopeIcon className="w-4 h-4" />}
+        />
 
         <Field
           label="Password"
@@ -95,7 +125,11 @@ export default function Register() {
               onClick={() => setShowPassword(!showPassword)}
               className="text-muted hover:text-navy"
             >
-              {showPassword ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+              {showPassword ? (
+                <EyeIcon className="w-5 h-5" />
+              ) : (
+                <EyeSlashIcon className="w-5 h-5" />
+              )}
             </button>
           }
         />
@@ -110,13 +144,20 @@ export default function Register() {
           required
           icon={<ShieldCheckIcon className="w-4 h-4" />}
           rightIcon={
-            <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="text-muted hover:text-navy">
-              {showConfirm ? <EyeIcon className="w-5 h-5" /> : <EyeSlashIcon className="w-5 h-5" />}
+            <button
+              type="button"
+              onClick={() => setShowConfirm(!showConfirm)}
+              className="text-muted hover:text-navy"
+            >
+              {showConfirm ? (
+                <EyeIcon className="w-5 h-5" />
+              ) : (
+                <EyeSlashIcon className="w-5 h-5" />
+              )}
             </button>
           }
         />
 
-        {/* ADDED CHECKBOX HERE */}
         <div className="flex items-end gap-2 pt-2">
           <input
             type="checkbox"
@@ -125,13 +166,22 @@ export default function Register() {
             onChange={(e) => setAgreeTerms(e.target.checked)}
             className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
           />
-          <label htmlFor="terms" className="text-xs text-gray-600 leading-snug cursor-pointer">
+          <label
+            htmlFor="terms"
+            className="text-xs text-gray-600 leading-snug cursor-pointer"
+          >
             I agree to the{" "}
-            <Link to="/terms" className="font-semibold text-primary hover:underline">
+            <Link
+              to="/terms"
+              className="font-semibold text-primary hover:underline"
+            >
               Terms and Conditions
             </Link>{" "}
             and{" "}
-            <Link to="/privacy" className="font-semibold text-primary hover:underline">
+            <Link
+              to="/privacy"
+              className="font-semibold text-primary hover:underline"
+            >
               Privacy Policy
             </Link>{" "}
             of TrabahoNow.
@@ -140,7 +190,7 @@ export default function Register() {
 
         <button
           type="submit"
-          disabled={submitting || !agreeTerms} // Disabled if not checked
+          disabled={submitting || !agreeTerms}
           className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {submitting ? "Creating account..." : "Create account"}
@@ -149,7 +199,11 @@ export default function Register() {
 
       <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{" "}
-        <Link to="/login" state={{ from }} className="font-semibold text-primary hover:underline">
+        <Link
+          to="/login"
+          state={{ from }}
+          className="font-semibold text-primary hover:underline"
+        >
           Log in here.
         </Link>
       </p>

@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  // 👇 FIX: Memoize the value object so it only changes when user/loading change
+ 
   const contextValue = useMemo(() => ({
     user,
     loading,
