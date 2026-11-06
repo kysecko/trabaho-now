@@ -7,12 +7,11 @@ use App\Http\Controllers\Api\Auth\AuthController;
 
 // Auth Routes
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::post('google-login', [AuthController::class, 'googleLogin']);
+Route::post('/login',    [AuthController::class, 'login']);
+Route::post('/logout',   [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
-
-// Email Verification Route
+// Email Verification Link (legacy — still works if you ever email a signed URL)
 Route::get('/email/verify/{id}/{hash}', function (Request $request) {
     $frontend = config('app.frontend_url', 'http://localhost:5173');
 
@@ -29,5 +28,5 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request) {
         event(new \Illuminate\Auth\Events\Verified($user));
     }
 
-        return redirect("$frontend/login?verified=1");
+    return redirect("$frontend/login?verified=1");
 })->name('verification.verify');

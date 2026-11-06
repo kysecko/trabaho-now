@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -14,44 +15,44 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
-    // In AuthController.php
-
+    // ─────────────────────────────────────────────────────────
+    // Register — no token returned. User must verify email, then log in.
+    // ─────────────────────────────────────────────────────────
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', Rule::in([UserRole::Client->value, UserRole::Jobseeker->value])],
+            'role'     => ['required', Rule::in([UserRole::Client->value, UserRole::Jobseeker->value])],
         ]);
 
         $user = User::create($data);
 
-        $token = $user->createToken('web')->plainTextToken;
-
         return response()->json([
             'message' => 'Registration successful. Please verify your email.',
-            'token' => $token,
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'email_verified_at' => $user->email_verified_at,
-                'is_verified' => (bool) $user->is_verified,  
-                'verification_status' => $user->verification_status ?? 'none',  
+                'id'                  => $user->id,
+                'name'                => $user->name,
+                'email'               => $user->email,
+                'role'                => $user->role,
+                'email_verified_at'   => $user->email_verified_at,
+                'is_verified'         => (bool) $user->is_verified,
+                'verification_status' => $user->verification_status ?? 'none',
             ],
         ], 201);
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Login — blocks unverified users.
+    // ─────────────────────────────────────────────────────────
     public function login(Request $request)
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
@@ -63,20 +64,30 @@ class AuthController extends Controller
             ]);
         }
 
+        if (! $user->email_verified_at) {
+            return response()->json([
+                'message' => 'Please verify your email before logging in.',
+                'code'    => 'email_unverified',
+            ], 403);
+        }
+
         return response()->json([
             'token' => $user->createToken('web')->plainTextToken,
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'email_verified_at' => $user->email_verified_at,
-                'is_verified' => (bool) $user->is_verified, // 👈 ADDED
-                'verification_status' => $user->verification_status ?? 'none',  
+                'id'                  => $user->id,
+                'name'                => $user->name,
+                'email'               => $user->email,
+                'role'                => $user->role,
+                'email_verified_at'   => $user->email_verified_at,
+                'is_verified'         => (bool) $user->is_verified,
+                'verification_status' => $user->verification_status ?? 'none',
             ],
         ]);
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Logout
+    // ─────────────────────────────────────────────────────────
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -84,9 +95,21 @@ class AuthController extends Controller
         return response()->noContent();
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Send OTP — public, identified by email in the request body.
+    // ─────────────────────────────────────────────────────────
     public function sendOtp(Request $request)
     {
-        $user = $request->user();
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        // Never leak whether the email exists.
+        if (! $user) {
+            return response()->json(['message' => 'Verification code sent.']);
+        }
 
         if ($user->email_verified_at) {
             return response()->json(['message' => 'Already verified.']);
@@ -94,7 +117,10 @@ class AuthController extends Controller
 
         $dailyKey = "otp_daily:{$user->id}";
         if (Cache::get($dailyKey, 0) >= 10) {
-            return response()->json(['message' => 'Too many codes requested today. Try again tomorrow.'], 429);
+            return response()->json(
+                ['message' => 'Too many codes requested today. Try again tomorrow.'],
+                429
+            );
         }
         Cache::put($dailyKey, Cache::get($dailyKey, 0) + 1, now()->endOfDay());
 
@@ -102,6 +128,7 @@ class AuthController extends Controller
 
         Cache::put("otp:{$user->id}", Hash::make($code), now()->addMinutes(10));
         Cache::forget("otp_attempts:{$user->id}");
+
         try {
             $this->sendMail(
                 $user->email,
@@ -125,34 +152,69 @@ class AuthController extends Controller
         return response()->json(['message' => 'Verification code sent.']);
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Verify OTP — public, identified by email + code in body.
+    // ─────────────────────────────────────────────────────────
     public function verifyOtp(Request $request)
     {
-        $request->validate(['code' => 'required|digits:6']);
+        $request->validate([
+            'email' => ['required', 'email'],
+            'code'  => ['required', 'digits:6'],
+        ]);
 
-        $user = $request->user();
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return response()->json(['message' => 'Invalid or expired code.'], 422);
+        }
+
+        if ($user->email_verified_at) {
+            return response()->json(['message' => 'Already verified.']);
+        }
+
         $attemptsKey = "otp_attempts:{$user->id}";
 
         if (Cache::get($attemptsKey, 0) >= 5) {
-            return response()->json(['message' => 'Too many attempts. Request a new code.'], 429);
+            return response()->json(
+                ['message' => 'Too many attempts. Request a new code.'],
+                429
+            );
         }
 
         $hash = Cache::get("otp:{$user->id}");
 
         if (! $hash || ! Hash::check($request->code, $hash)) {
-            Cache::put($attemptsKey, Cache::get($attemptsKey, 0) + 1, now()->addMinutes(10));
+            Cache::put(
+                $attemptsKey,
+                Cache::get($attemptsKey, 0) + 1,
+                now()->addMinutes(10)
+            );
+
             return response()->json(['message' => 'Invalid or expired code.'], 422);
         }
 
         Cache::forget("otp:{$user->id}");
         Cache::forget($attemptsKey);
 
-        $user->forceFill([
-            'email_verified_at' => now(),
-        ])->save();
+        $user->forceFill(['email_verified_at' => now()])->save();
 
-        return response()->json(['user' => $user->fresh()]);
+        return response()->json([
+            'message' => 'Email verified. You can now log in.',
+            'user' => [
+                'id'                  => $user->id,
+                'name'                => $user->name,
+                'email'               => $user->email,
+                'role'                => $user->role,
+                'email_verified_at'   => $user->email_verified_at,
+                'is_verified'         => (bool) $user->is_verified,
+                'verification_status' => $user->verification_status ?? 'none',
+            ],
+        ]);
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Forgot password — unchanged.
+    // ─────────────────────────────────────────────────────────
     public function forgotPassword(Request $request)
     {
         $request->validate(['email' => 'required|email']);
@@ -186,11 +248,14 @@ class AuthController extends Controller
         ]);
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Reset password — unchanged.
+    // ─────────────────────────────────────────────────────────
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'token' => 'required|string',
-            'email' => 'required|email',
+            'token'    => 'required|string',
+            'email'    => 'required|email',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -206,12 +271,18 @@ class AuthController extends Controller
         );
 
         if ($status !== Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'This reset link is invalid or has expired.'], 422);
+            return response()->json(
+                ['message' => 'This reset link is invalid or has expired.'],
+                422
+            );
         }
 
         return response()->json(['message' => 'Password updated. You can now log in.']);
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Mail helper — unchanged.
+    // ─────────────────────────────────────────────────────────
     private function sendMail(string $toEmail, ?string $toName, string $subject, string $html, string $text): void
     {
         $res = Http::timeout(20)
