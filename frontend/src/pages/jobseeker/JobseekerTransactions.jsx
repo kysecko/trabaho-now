@@ -9,7 +9,7 @@ export default function JobseekerTransactions() {
 
   if (!isVerified) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center min-h-[400px] text-center">
+      <div className="p-6 flex flex-col items-center justify-center min-h-100 text-center">
         <BanknotesIcon className="w-16 h-16 text-gray-300 mb-4" />
         <h2 className="text-xl font-bold text-gray-800 mb-2">Wallet Locked</h2>
         <p className="text-gray-500 mb-6 max-w-sm">Verify your account to receive payments, view receipts, and withdraw your earnings.</p>
@@ -19,11 +19,14 @@ export default function JobseekerTransactions() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl">
-      <h1 className="text-2xl font-bold text-gray-800">Transactions</h1>
-      
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-navy">Transaction History</h1>
+        <p className="mt-1 text-sm text-muted">Your earnings, separate into received and upcoming payments.</p>
+      </div>
+
       {/* Wallet Card */}
-      <div className="bg-gradient-to-r from-[#101e32] to-[#1b2b45] text-white p-8 rounded-2xl shadow-lg relative overflow-hidden">
+      <div className="bg-linear-to-r from-navy to-navy-2 text-white p-8 rounded-2xl shadow-lg relative overflow-hidden">
         <div className="relative z-10">
           <p className="text-gray-300 font-medium mb-1">Available Balance</p>
           <h2 className="text-4xl font-bold mb-6">₱12,300.00</h2>
@@ -31,7 +34,7 @@ export default function JobseekerTransactions() {
             <ArrowDownTrayIcon className="w-5 h-5" /> Withdraw Funds
           </button>
         </div>
-        <BanknotesIcon className="absolute right-[-20px] bottom-[-20px] w-48 h-48 text-white/5" />
+        <BanknotesIcon className="absolute right-5 bottom-5 w-48 h-48 text-white/5" />
       </div>
 
       {/* History List */}

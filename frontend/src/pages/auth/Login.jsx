@@ -4,20 +4,27 @@ import { loginUser } from "../../api/auth";
 import { useAuth } from "../../context/AuthContext";
 import Field from "../../components/ui/Field";
 import { roleHome } from "../../lib/roleHome";
-
-import { EnvelopeIcon, ShieldCheckIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import {
+  EnvelopeIcon,
+  ShieldCheckIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from "@heroicons/react/24/outline";
 
 export default function Login() {
   const { user, login } = useAuth();
   const location = useLocation();
   const from = location.state?.from;
 
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: location.state?.email ?? "",
+    password: "",
+  });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // smart redirect logic
+  // If already logged in → smart redirect.
   if (user) return <Navigate to={from || roleHome(user)} replace />;
 
   const first = (key) => errors[key]?.[0];
@@ -29,7 +36,8 @@ export default function Login() {
     setErrors({});
     try {
       const data = await loginUser(form);
-      login(data.token, data.user);
+      await login(data.token, data.user);
+      // Auth state updates → the `if (user)` guard above handles the redirect.
     } catch (err) {
       setErrors(err.errors || { form: [err.message] });
     } finally {
@@ -40,8 +48,12 @@ export default function Login() {
   return (
     <div className="w-full">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-navy sm:text-3xl">Welcome back!</h1>
-        <p className="mt-2 text-sm text-muted">Log in to continue — to your job search or your services.</p>
+        <h1 className="text-2xl font-bold text-navy sm:text-3xl">
+          Welcome back!
+        </h1>
+        <p className="mt-2 text-sm text-muted">
+          Log in to continue — to your job search or your services.
+        </p>
       </div>
 
       {location.state?.verified && (
@@ -85,15 +97,21 @@ export default function Login() {
               onClick={() => setShowPassword(!showPassword)}
               className="text-muted hover:text-navy"
             >
-              {showPassword
-                ? <EyeIcon className="w-5 h-5" />
-                : <EyeSlashIcon className="w-5 h-5" />}
+              {showPassword ? (
+                <EyeIcon className="w-5 h-5" />
+              ) : (
+                <EyeSlashIcon className="w-5 h-5" />
+              )}
             </button>
           }
         />
 
         <div className="flex justify-end">
-          <Link to="/forgot-password" state={{ from }} className="text-sm font-semibold text-primary hover:underline">
+          <Link
+            to="/forgot-password"
+            state={{ from }}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
             Forgot your password?
           </Link>
         </div>
@@ -109,7 +127,11 @@ export default function Login() {
 
       <p className="mt-6 text-center text-sm text-muted">
         Don't have an account?{" "}
-        <Link to="/register" state={{ from }} className="font-semibold text-primary hover:underline">
+        <Link
+          to="/register"
+          state={{ from }}
+          className="font-semibold text-primary hover:underline"
+        >
           Register here.
         </Link>
       </p>
