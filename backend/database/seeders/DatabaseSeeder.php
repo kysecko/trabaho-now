@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Create the main admin account.
         User::firstOrCreate(
             ['email' => 'admin@trabahonow'],
             [
@@ -17,8 +18,13 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'role' => 'admin',
                 'is_verified' => true,
-                'verification_status' => 'approved'
-            ],
+                'verification_status' => 'approved',
+            ]
         );
+
+        // Create sample verification accounts and requests.
+        $this->call([
+            VerificationSeeder::class,
+        ]);
     }
 }

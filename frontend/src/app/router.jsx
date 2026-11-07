@@ -1,12 +1,15 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 
 // Layouts
 import PublicLayout from "../components/layout/PublicLayout";
 import AuthLayout from "../components/layout/AuthLayout";
-import VerificationLayout from "../components/layout/VerificationLayout"; // Ensure this exists
+import VerificationLayout from "../components/layout/VerificationLayout";
 
 // Guards
 import RoleRoute from "./guards/RoleRoute";
+
+// Context
+import { VerifyProvider } from "../context/VerifyContext";
 
 // Public Pages
 import Home from "../pages/public/Home";
@@ -24,16 +27,17 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 import VerifyEmail from "../pages/auth/VerifyEmail";
 import ResetPassword from "../pages/auth/ResetPassword";
 
-// Verification Pages
+// Verification Pages - Shared
 import ChooseRole from "../pages/verification/ChooseRole";
 import VerifyStart from "../pages/verification/VerifyStart";
-import VerifyIdentity from "../pages/verification/VerifyIdentity";
 import VerifyPending from "../pages/verification/VerifyPending";
 
 // Modular Route Functions
 import ClientRoutes from "./routes/clientRoutes";
 import JobseekerRoutes from "./routes/jobseekerRoutes";
 import AdminRoutes from "./routes/adminRoutes";
+import ClientVerificationRoutes from "./routes/clientVerificationRoutes";
+import JobseekerVerificationRoutes from "./routes/jobseekerVerificationRoutes";
 
 // Error Pages
 import NotFound from "../pages/404NotFound";
@@ -41,7 +45,7 @@ import NotFound from "../pages/404NotFound";
 export default function AppRouter() {
   return (
     <Routes>
-      {/* landing page */}
+      {/* Public Routes */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/jobseekers" element={<Jobseekers />} />
@@ -53,34 +57,46 @@ export default function AppRouter() {
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
 
-      {/* authentication */}
+      {/* Authentication */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        {/* Changed to /verify-email */}
-        <Route path="/verify-email" element={<VerifyEmail />} /> 
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
       {/* Identity Verification Onboarding Flow */}
       <Route element={<RoleRoute role={["client", "jobseeker"]} />}>
         <Route element={<VerificationLayout />}>
-          <Route path="/verify" element={<ChooseRole />} />
-          <Route path="/verify/start" element={<VerifyStart />} />
-          <Route path="/verify/identity" element={<VerifyIdentity />} />
-          <Route path="/verify/pending" element={<VerifyPending />} />
+          {/* One provider shared by every verification step (client + jobseeker) */}
+          <Route
+            element={
+              <VerifyProvider>
+                <Outlet />
+              </VerifyProvider>
+            }
+          >
+            {/* Shared Steps */}
+            <Route path="/verify" element={<ChooseRole />} />
+            <Route path="/verify/start" element={<VerifyStart />} />
+            <Route path="/verify/pending" element={<VerifyPending />} />
+
+            {/* Role-specific flows */}
+            {ClientVerificationRoutes()}
+            {JobseekerVerificationRoutes()}
+          </Route>
         </Route>
       </Route>
 
-      {/* Dashboard Routes (Login required, NO RequireVerified wrapper) */}
+      {/* Dashboard Routes (Login required, Verification handled inside pages) */}
       <Route element={<RoleRoute role={["client", "jobseeker", "admin"]} />}>
         {ClientRoutes()}
         {JobseekerRoutes()}
         {AdminRoutes()}
       </Route>
 
-      {/* error 404 */}
+      {/* 404 Catch-All */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -9,15 +9,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            if (! Schema::hasColumn('users', 'is_verified')) {
+                $table->boolean('is_verified')->default(false);
+            }
             // none | pending | approved | rejected
-            $table->string('verification_status')->default('none')->after('is_verified');
+            if (! Schema::hasColumn('users', 'verification_status')) {
+                $table->string('verification_status')->default('none')->index();
+            }
+            if (! Schema::hasColumn('users', 'rejection_reason')) {
+                $table->text('rejection_reason')->nullable();
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('verification_status');
+            if (Schema::hasColumn('users', 'rejection_reason')) {
+                $table->dropColumn('rejection_reason');
+            }
         });
     }
 };

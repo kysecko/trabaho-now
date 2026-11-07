@@ -56,7 +56,7 @@ export default function Register() {
         form.email;
 
       // Do NOT log in here. The user must verify their email, then log in.
-      navigate("/verify", { replace: true, state: { email } });
+      navigate("/verify-email", { replace: true, state: { email } });
     } catch (err) {
       console.error("Registration Error:", err);
       setErrors(
