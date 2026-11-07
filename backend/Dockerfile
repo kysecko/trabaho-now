@@ -37,14 +37,10 @@ RUN mkdir -p /app/storage/logs \
 # Give ownership of the app to www-data
 RUN chown -R www-data:www-data /app
 
-# Fix Nginx temporary directories (this fixes the file upload 500 error)
-RUN mkdir -p /var/lib/nginx/tmp/client_body \
-             /var/lib/nginx/tmp/proxy \
-             /var/lib/nginx/tmp/fastcgi \
-             /var/lib/nginx/tmp/uwsgi \
-             /var/lib/nginx/tmp/scgi \
-    && chown -R www-data:www-data /var/lib/nginx/tmp \
-    && chmod -R 755 /var/lib/nginx/tmp
+# Fix Nginx upload temp path permission issue (fixes file upload 500 error)
+RUN echo "client_body_temp_path /tmp/nginx_client_body;" > /etc/nginx/conf.d/client_body_temp.conf \
+    && mkdir -p /tmp/nginx_client_body \
+    && chmod 777 /tmp/nginx_client_body
 
 # Disable NPM build
 ENV NPM_BUILD=false
