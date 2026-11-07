@@ -15,7 +15,7 @@ class VerificationController
     private const JOBSEEKER_DOCS = ['govId', 'selfie', 'residency', 'nbi'];
 
     private const TEXT_FIELDS = [
-        'email', 'firstName', 'middleName', 'lastName', 'gender', 'dob', 'mobile',
+        'email', 'firstName', 'middleName', 'lastName', 'gender', 'mobile',
         'street', 'barangay', 'zip',
     ];
     private const JOBSEEKER_TEXT_FIELDS = ['skill', 'experience', 'bio'];
@@ -59,7 +59,6 @@ class VerificationController
             'lastName' => ['required', 'string', 'max:100'],
             'gender' => ['required', 'in:Male,Female,Prefer not to say'],
             // remove the age rule if you don't want to enforce 18+
-            'dob' => ['required', 'date', 'before_or_equal:' . now()->subYears(18)->toDateString()],
             'mobile' => ['required', 'string', 'max:20'],
             'street' => ['required', 'string', 'max:255'],
             'barangay' => ['required', 'string', 'max:100'],
