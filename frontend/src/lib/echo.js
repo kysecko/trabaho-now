@@ -9,11 +9,6 @@ if (!key) {
   console.error('VITE_REVERB_APP_KEY is missing from .env');
 }
 
-console.log('🔑 KEY:', import.meta.env.VITE_REVERB_APP_KEY);
-console.log('🌐 HOST:', import.meta.env.VITE_REVERB_HOST);
-console.log('🔌 PORT:', import.meta.env.VITE_REVERB_PORT);
-console.log('📡 SCHEME:', import.meta.env.VITE_REVERB_SCHEME);
-
 const echo = new Echo({
   broadcaster: 'reverb',
   key,
