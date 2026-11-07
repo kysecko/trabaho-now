@@ -40,7 +40,7 @@ RUN mkdir -p /tmp/nginx_client_body \
     && chmod 777 /tmp/nginx_client_body \
     && echo "client_body_temp_path /tmp/nginx_client_body;" > /etc/nginx/conf.d/client_body_temp.conf
 
-# WebSocket Proxy for Reverb
+# WebSocket proxy for Reverb (nginx -> Reverb on localhost)
 RUN mkdir -p /etc/nginx/server-opts.d && printf '%s\n' \
   'location /app {' \
   '    proxy_pass http://127.0.0.1:8081;' \
@@ -50,25 +50,11 @@ RUN mkdir -p /etc/nginx/server-opts.d && printf '%s\n' \
   '    proxy_set_header Host $host;' \
   '}' > /etc/nginx/server-opts.d/reverb.conf
 
-# Force OPTIONS requests to return proper CORS headers
-RUN mkdir -p /etc/nginx/server-opts.d && cat > /etc/nginx/server-opts.d/cors-options.conf << 'EOF'
-if ($request_method = 'OPTIONS') {
-    add_header 'Access-Control-Allow-Origin' '$http_origin' always;
-    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, PATCH, DELETE, OPTIONS' always;
-    add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type, Accept, X-Requested-With, Origin' always;
-    add_header 'Access-Control-Allow-Credentials' 'true' always;
-    add_header 'Access-Control-Max-Age' 1728000;
-    add_header 'Content-Type' 'text/plain; charset=utf-8';
-    add_header 'Content-Length' 0;
-    return 204;
-}
-EOF
-
-# Start Reverb via S6 Overlay
+# Start Reverb via S6 Overlay, bound to localhost only
 RUN mkdir -p /etc/s6-overlay/s6-rc.d/reverb && \
     echo "longrun" > /etc/s6-overlay/s6-rc.d/reverb/type && \
     echo "#!/command/with-contenv sh" > /etc/s6-overlay/s6-rc.d/reverb/run && \
-    echo "exec php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8081" >> /etc/s6-overlay/s6-rc.d/reverb/run && \
+    echo "exec php /var/www/html/artisan reverb:start --host=127.0.0.1 --port=8081" >> /etc/s6-overlay/s6-rc.d/reverb/run && \
     chmod +x /etc/s6-overlay/s6-rc.d/reverb/run && \
     mkdir -p /etc/s6-overlay/s6-rc.d/user/contents.d && \
     touch /etc/s6-overlay/s6-rc.d/user/contents.d/reverb
