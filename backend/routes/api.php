@@ -4,9 +4,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Admin\VerificationReviewController;
+use Illuminate\Support\Facades\Broadcast;
 
 require __DIR__ . '/api/auth.php';
 
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
 // ─────────────────────────────────────────────────────────────
 // Public endpoints (no auth token required).
 // These identify the user by email from the request body.
@@ -23,8 +25,10 @@ Route::prefix('public')->group(function () {
 
 // Admin document viewer. NOT behind auth: <img src> can't send a bearer token.
 // The `signed` middleware makes each link expire (10 min) and be tamper-proof.
-Route::get('/admin/verifications/{verification}/documents/{key}',
-    [VerificationReviewController::class, 'document'])
+Route::get(
+    '/admin/verifications/{verification}/documents/{key}',
+    [VerificationReviewController::class, 'document']
+)
     ->name('admin.verifications.document')
     ->middleware('signed');
 
@@ -33,7 +37,7 @@ Route::get('/admin/verifications/{verification}/documents/{key}',
 // ─────────────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/user', fn (Request $request) => response()->json($request->user()->toAuthArray()));
+    Route::get('/user', fn(Request $request) => response()->json($request->user()->toAuthArray()));
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
