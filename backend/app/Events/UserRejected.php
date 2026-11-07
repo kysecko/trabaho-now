@@ -14,6 +14,7 @@ class UserRejected implements ShouldBroadcast
 
     public $userId;
     public $reason;
+    public $connection = 'sync'; // 👈 ADD THIS
 
     public function __construct($userId, $reason = null)
     {

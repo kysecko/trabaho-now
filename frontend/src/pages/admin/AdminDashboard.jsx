@@ -1,14 +1,60 @@
-import { 
-  UsersIcon, 
-  BriefcaseIcon, 
-  UserGroupIcon, 
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  UsersIcon,
+  BriefcaseIcon,
+  UserGroupIcon,
   ClipboardDocumentListIcon,
   FunnelIcon,
   CalendarDaysIcon,
   ChevronDownIcon
 } from "@heroicons/react/24/outline";
+import { getVerifications } from "../../api/admin";
+
+// Must match the path of your VerificationQueue route in adminRoutes
+const QUEUE_PATH = "/admin/verifications";
+
+const timeAgo = (iso) => {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+};
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+
+  // Live verification queue
+  const [queue, setQueue] = useState([]);
+  const [queueTotal, setQueueTotal] = useState(0);
+  const [queueLoading, setQueueLoading] = useState(true);
+  const [queueError, setQueueError] = useState(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    (async () => {
+      try {
+        const res = await getVerifications("pending");
+        if (ignore) return;
+        const rows = res?.data ?? [];
+        setQueue(rows.slice(0, 5));
+        setQueueTotal(res?.total ?? rows.length);
+      } catch (err) {
+        if (!ignore) setQueueError(err.message);
+      } finally {
+        if (!ignore) setQueueLoading(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   // Mock data based on the screenshot
   const stats = [
     { title: "Total Users", value: "12,345", badge: "+5 new", subtitle: "active accounts", icon: UsersIcon },
@@ -23,14 +69,6 @@ export default function AdminDashboard() {
     { id: "TRX-68564", client: "Ana Cruz", provider: "Mark Dela Cruz", service: "Plumbing", status: "Ongoing", date: "Nov 28, 2023", time: "10:18 AM" },
     { id: "TRX-38463", client: "Paolo Garcia", provider: "Javier Aquino", service: "Welding", status: "Pending", date: "Nov 28, 2023", time: "10:12 AM" },
     { id: "TRX-53706", client: "Liza Torres", provider: "Rico Villanueva", service: "Aircon service", status: "Pending", date: "Nov 28, 2023", time: "09:58 AM" },
-  ];
-
-  const verifications = [
-    { name: "Maria Santos", role: "Welder", time: "18 min ago" },
-    { name: "Juan Reyes", role: "Electrician", time: "34 min ago" },
-    { name: "Juan Reyes", role: "Electrician", time: "34 min ago" },
-    { name: "Juan Reyes", role: "Electrician", time: "34 min ago" },
-    { name: "Miguel Cruz", role: "Plumber", time: "52 min ago" },
   ];
 
   return (
@@ -68,7 +106,7 @@ export default function AdminDashboard() {
 
       {/* Bottom Section: Tables & Queues */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        
+
         {/* Recent Transactions (Takes up 2 columns) */}
         <div className="col-span-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
@@ -80,7 +118,7 @@ export default function AdminDashboard() {
               View all
             </button>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex gap-6 border-b border-gray-200 px-5 text-sm font-medium text-gray-500">
             <button className="border-b-2 border-blue-600 py-3 text-blue-600">All transactions</button>
@@ -130,23 +168,42 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Provider Verification Queue (Takes up 1 column) */}
+        {/* Verification Queue (Takes up 1 column) */}
         <div className="col-span-1 rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Provider Verification Queue</h2>
-              <p className="text-xs text-orange-500">5 providers awaiting review</p>
+              <h2 className="text-lg font-bold text-gray-900">Verification Queue</h2>
+              <p className="text-xs text-orange-500">
+                {queueLoading ? "Loading..." : `${queueTotal} awaiting review`}
+              </p>
             </div>
-            <button className="text-gray-400 hover:text-gray-600">•••</button>
+            <button
+              type="button"
+              onClick={() => navigate(QUEUE_PATH)}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-gray-50"
+            >
+              View all
+            </button>
           </div>
+
           <div className="divide-y divide-gray-100">
-            {verifications.map((v, i) => (
-              <div key={i} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{v.name}</p>
-                  <p className="text-xs text-gray-500">{v.role} • {v.time}</p>
+            {queueError && <p className="px-5 py-4 text-sm text-red-600">{queueError}</p>}
+
+            {!queueLoading && !queueError && queue.length === 0 && (
+              <p className="px-5 py-4 text-sm text-gray-500">No requests waiting. You're all caught up.</p>
+            )}
+
+            {queue.map((v) => (
+              <div key={v.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-gray-900">{v.name || v.user?.name}</p>
+                  <p className="text-xs capitalize text-gray-500">{v.role} • {timeAgo(v.submitted_at)}</p>
                 </div>
-                <button className="rounded-md bg-blue-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800">
+                <button
+                  type="button"
+                  onClick={() => navigate(`${QUEUE_PATH}?open=${v.id}`)}
+                  className="shrink-0 rounded-md bg-blue-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800"
+                >
                   Review
                 </button>
               </div>

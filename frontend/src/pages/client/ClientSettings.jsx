@@ -6,6 +6,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
+import { useVerificationStatus } from "../../hooks/useVerificationStatus";
 
 function Card({ title, description, children }) {
   return (
@@ -70,6 +71,7 @@ const PrimaryBtn = ({ children, ...props }) => (
 
 export default function ClientSettings() {
   const { user } = useAuth();
+  const { isVerified, isPending, isRejected, rejectionReason } = useVerificationStatus();
 
   const [account, setAccount] = useState({
     name: user?.name ?? "",
@@ -92,9 +94,6 @@ export default function ClientSettings() {
   const setPref = (k) => (v) => setPrefs((p) => ({ ...p, [k]: v }));
 
   const [confirmDelete, setConfirmDelete] = useState(false);
-
-  const isVerified = user?.is_verified === true || user?.verification_status === "approved";
-  const isPending = user?.verification_status === "pending";
 
   const saveAccount = (e) => {
     e.preventDefault();
@@ -140,6 +139,24 @@ export default function ClientSettings() {
               <p className="text-sm font-bold text-yellow-800">Under review</p>
               <p className="text-sm text-yellow-700">We’ll notify you within 24–48 hours.</p>
             </div>
+          </div>
+        ) : isRejected ? (
+          <div className="flex flex-col gap-4 rounded-xl bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <ExclamationTriangleIcon className="h-6 w-6 shrink-0 text-red-600" />
+              <div>
+                <p className="text-sm font-bold text-red-800">Verification not approved</p>
+                <p className="text-sm text-red-700">
+                  {rejectionReason || "Please review your details and submit again."}
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/verify"
+              className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-red-700"
+            >
+              Resubmit
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col gap-4 rounded-xl bg-orange-50 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -231,20 +248,20 @@ export default function ClientSettings() {
             <Toggle label="Booking updates" description="Accepted, declined or rescheduled requests" checked={prefs.bookings} onChange={setPref("bookings")} disabled={!isVerified} />
             <Toggle label="Payments" description="Receipts and payment confirmations" checked={prefs.payments} onChange={setPref("payments")} disabled={!isVerified} />
             <Toggle label="Review reminders" description="A nudge to rate finished jobs" checked={prefs.reviews} onChange={setPref("reviews")} disabled={!isVerified} />
-            
-            <Toggle 
-              label="Email" 
-              description={!isVerified ? "Required for verification updates" : "Send notifications to your email"} 
-              checked={!isVerified ? true : prefs.email} 
-              onChange={setPref("email")} 
-              disabled={!isVerified} 
+
+            <Toggle
+              label="Email"
+              description={!isVerified ? "Required for verification updates" : "Send notifications to your email"}
+              checked={!isVerified ? true : prefs.email}
+              onChange={setPref("email")}
+              disabled={!isVerified}
             />
-            <Toggle 
-              label="SMS" 
-              description={!isVerified ? "Required for verification updates" : "Send text messages to your mobile"} 
-              checked={!isVerified ? true : prefs.sms} 
-              onChange={setPref("sms")} 
-              disabled={!isVerified} 
+            <Toggle
+              label="SMS"
+              description={!isVerified ? "Required for verification updates" : "Send text messages to your mobile"}
+              checked={!isVerified ? true : prefs.sms}
+              onChange={setPref("sms")}
+              disabled={!isVerified}
             />
           </div>
         </Card>

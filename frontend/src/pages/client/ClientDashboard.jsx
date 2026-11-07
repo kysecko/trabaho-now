@@ -8,9 +8,10 @@ import {
 
 import Button from "../../components/ui/Button";
 import WelcomeModal from "../../components/ui/WelcomeModal";
-import VerifyRequiredModal from "../../components/ui/VerifyRequiredModal"; // NEW
+import VerifyRequiredModal from "../../components/ui/VerifyRequiredModal";
 import JobseekerCard from "../../components/ui/dashboard/JobseekerCard";
 import { useAuth } from "../../context/AuthContext";
+import { useVerificationStatus } from "../../hooks/useVerificationStatus";
 import api from "../../api/client";
 
 const toCardData = (j) => ({
@@ -33,13 +34,11 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // NEW: controls the "Verification Required" modal
+  // Controls the "Verification Required" modal
   const [showVerifyModal, setShowVerifyModal] = useState(false);
 
-  // Same rule as the Find Jobseekers page, so both behave the same way
-  const isVerified =
-    user?.is_verified === true || user?.verification_status === "approved";
-  const isPending = user?.verification_status === "pending";
+  // One shared rule for every page (dashboard, settings, notifications)
+  const { isVerified, isPending, isRejected, rejectionReason } = useVerificationStatus();
 
   useEffect(() => {
     let ignore = false;
@@ -65,8 +64,7 @@ export default function ClientDashboard() {
     };
   }, []);
 
-  // CHANGED: unverified users now see the modal first instead of being
-  // sent straight to /verify. They only go to /verify from the modal.
+  // Unverified users see the modal first instead of being sent straight to /verify.
   const handleHire = (jobseekerId) => {
     if (!isVerified) {
       setShowVerifyModal(true);
@@ -111,9 +109,9 @@ export default function ClientDashboard() {
           </Button>
         </section>
 
-        {/* FORCED VERIFICATION BANNERS */}
+        {/* VERIFICATION BANNERS */}
 
-        {/* Pending Banner */}
+        {/* Pending */}
         {isPending && (
           <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
             <div className="flex items-start gap-3">
@@ -128,8 +126,31 @@ export default function ClientDashboard() {
           </div>
         )}
 
-        {/* Unverified Banner - catches null/undefined too */}
-        {!isVerified && !isPending && (
+        {/* Rejected */}
+        {isRejected && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <ExclamationTriangleIcon className="h-6 w-6 shrink-0 text-red-600" />
+                <div>
+                  <h3 className="font-bold text-red-800">Verification not approved</h3>
+                  <p className="text-sm text-red-700">
+                    {rejectionReason || "Please review your details and submit again."}
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/verify"
+                className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-red-700"
+              >
+                Resubmit
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Not verified yet (never submitted) */}
+        {!isVerified && !isPending && !isRejected && (
           <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
             <div className="flex flex-col items-center sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-3">

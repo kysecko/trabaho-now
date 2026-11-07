@@ -8,7 +8,6 @@ const initialData = {
   middleName: "",
   lastName: "",
   gender: "",
-  dob: "",
   mobile: "",
   street: "",
   barangay: "",
