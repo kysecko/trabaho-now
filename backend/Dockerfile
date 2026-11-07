@@ -16,7 +16,8 @@ COPY . .
 RUN composer dump-autoload --no-dev --optimize
 
 
-FROM ghcr.io/forlaravel/docker:latest-php8.4-fpm
+# Use a combined Nginx + PHP-FPM image
+FROM serversideup/php:8.4-fpm-nginx
 
 WORKDIR /app
 
@@ -38,9 +39,9 @@ RUN mkdir -p /app/storage/logs \
 RUN chown -R www-data:www-data /app
 
 # Fix Nginx upload temp path permission issue (fixes file upload 500 error)
-RUN echo "client_body_temp_path /tmp/nginx_client_body;" > /etc/nginx/conf.d/client_body_temp.conf \
-    && mkdir -p /tmp/nginx_client_body \
-    && chmod 777 /tmp/nginx_client_body
+RUN mkdir -p /tmp/nginx_client_body \
+    && chmod 777 /tmp/nginx_client_body \
+    && echo "client_body_temp_path /tmp/nginx_client_body;" > /etc/nginx/conf.d/client_body_temp.conf
 
 # Disable NPM build
 ENV NPM_BUILD=false
