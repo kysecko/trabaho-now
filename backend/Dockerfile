@@ -50,6 +50,18 @@ RUN mkdir -p /etc/nginx/server-opts.d && printf '%s\n' \
   '    proxy_set_header Host $host;' \
   '}' > /etc/nginx/server-opts.d/reverb.conf
 
+  # Force OPTIONS requests to be handled by PHP (Laravel CORS)
+RUN mkdir -p /etc/nginx/server-opts.d && printf '%s\n' \
+  'if ($request_method = OPTIONS) {' \
+  '    add_header Access-Control-Allow-Origin $http_origin always;' \
+  '    add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;' \
+  '    add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, X-Requested-With" always;' \
+  '    add_header Access-Control-Allow-Credentials true always;' \
+  '    add_header Content-Length 0;' \
+  '    add_header Content-Type text/plain;' \
+  '    return 204;' \
+  '}' > /etc/nginx/server-opts.d/cors-options.conf
+
 # Start Reverb via S6 Overlay
 RUN mkdir -p /etc/s6-overlay/s6-rc.d/reverb && \
     echo "longrun" > /etc/s6-overlay/s6-rc.d/reverb/type && \
