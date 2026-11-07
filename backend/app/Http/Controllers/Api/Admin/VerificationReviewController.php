@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\UserVerified;
+use App\Events\UserRejected;
 use App\Models\VerificationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -90,7 +92,10 @@ class VerificationReviewController
             ])->save();
         });
 
-        // TODO: notify the user (your Notifications / Mail folders), e.g.
+        // 🔥 REAL-TIME BROADCAST: Fire the event AFTER the DB commit succeeds
+        broadcast(new UserVerified($verification->user->id));
+
+        // TODO: notify the user (your Notifications / Mail folders)
         // $verification->user->notify(new VerificationReviewed($verification));
 
         return response()->json(['message' => 'Verification approved.']);
@@ -122,7 +127,8 @@ class VerificationReviewController
             ])->save();
         });
 
-        // TODO: notify the user here as well
+        // 🔥 REAL-TIME BROADCAST: Notify the user they were rejected (optional)
+        broadcast(new UserRejected($verification->user->id, $validated['reason']));
 
         return response()->json(['message' => 'Verification rejected.']);
     }
