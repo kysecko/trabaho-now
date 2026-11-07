@@ -7,16 +7,6 @@ use App\Http\Controllers\Api\Admin\VerificationReviewController;
 use Illuminate\Support\Facades\Broadcast;
 
 require __DIR__ . '/api/auth.php';
-use Illuminate\Support\Facades\Artisan;
-
-// Temporary route to clear cache on production
-Route::get('/clear-cache', function() {
-    Artisan::call('route:clear');
-    Artisan::call('config:clear');
-    Artisan::call('cache:clear');
-    return 'Caches cleared successfully!';
-});
-
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 // ─────────────────────────────────────────────────────────────
 // Public endpoints (no auth token required).

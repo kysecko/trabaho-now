@@ -16,7 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Ensure CORS runs before other middleware.
+
+        $middleware->trustProxies(at: '*');
+
         $middleware->prepend(HandleCors::class);
 
         $middleware->alias([
