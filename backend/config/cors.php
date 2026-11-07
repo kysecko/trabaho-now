@@ -2,7 +2,7 @@
 
 return [
 
-    'paths' => ['api/*', 'broadcasting/auth', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'broadcasting/auth', 'sanctum/csrf-cookie', 'login', 'logout'],
 
     'allowed_methods' => ['*'],
 
@@ -20,6 +20,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,   // ← changed to true
+    'supports_credentials' => true,
 
 ];
