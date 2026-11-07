@@ -13,7 +13,7 @@ RUN composer install \
 
 COPY . .
 
-RUN composer dump-autoload --no-dev --optimize
+RUN composer dump-autoload --no-dev --optimize --no-scripts
 
 
 FROM serversideup/php:8.4-fpm-nginx
