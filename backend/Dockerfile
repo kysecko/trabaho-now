@@ -50,17 +50,19 @@ RUN mkdir -p /etc/nginx/server-opts.d && printf '%s\n' \
   '    proxy_set_header Host $host;' \
   '}' > /etc/nginx/server-opts.d/reverb.conf
 
-  # Force OPTIONS requests to be handled by PHP (Laravel CORS)
-RUN mkdir -p /etc/nginx/server-opts.d && printf '%s\n' \
-  'if ($request_method = OPTIONS) {' \
-  '    add_header Access-Control-Allow-Origin $http_origin always;' \
-  '    add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;' \
-  '    add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, X-Requested-With" always;' \
-  '    add_header Access-Control-Allow-Credentials true always;' \
-  '    add_header Content-Length 0;' \
-  '    add_header Content-Type text/plain;' \
-  '    return 204;' \
-  '}' > /etc/nginx/server-opts.d/cors-options.conf
+# Force OPTIONS requests to return proper CORS headers
+RUN mkdir -p /etc/nginx/server-opts.d && cat > /etc/nginx/server-opts.d/cors-options.conf << 'EOF'
+if ($request_method = 'OPTIONS') {
+    add_header 'Access-Control-Allow-Origin' '$http_origin' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, PATCH, DELETE, OPTIONS' always;
+    add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type, Accept, X-Requested-With, Origin' always;
+    add_header 'Access-Control-Allow-Credentials' 'true' always;
+    add_header 'Access-Control-Max-Age' 1728000;
+    add_header 'Content-Type' 'text/plain; charset=utf-8';
+    add_header 'Content-Length' 0;
+    return 204;
+}
+EOF
 
 # Start Reverb via S6 Overlay
 RUN mkdir -p /etc/s6-overlay/s6-rc.d/reverb && \
