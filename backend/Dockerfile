@@ -45,6 +45,21 @@ RUN mkdir -p /tmp/nginx_client_body \
     && chmod 777 /tmp/nginx_client_body \
     && echo "client_body_temp_path /tmp/nginx_client_body;" > /etc/nginx/conf.d/client_body_temp.conf
 
+# Create the Reverb service directory
+RUN mkdir -p /etc/s6-overlay/s6-rc.d/reverb
+
+# Service type
+RUN echo "longrun" > /etc/s6-overlay/s6-rc.d/reverb/type
+
+# The actual command to start Reverb
+RUN echo "#!/command/with-contenv sh" > /etc/s6-overlay/s6-rc.d/reverb/run && \
+    echo "exec php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080" >> /etc/s6-overlay/s6-rc.d/reverb/run && \
+    chmod +x /etc/s6-overlay/s6-rc.d/reverb/run
+
+# Add reverb to the user bundle so it starts automatically
+RUN mkdir -p /etc/s6-overlay/s6-rc.d/user/contents.d && \
+    touch /etc/s6-overlay/s6-rc.d/user/contents.d/reverb
+
 # Disable NPM build
 ENV NPM_BUILD=false
 
@@ -52,3 +67,7 @@ ENV NPM_BUILD=false
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 ENV LOG_CHANNEL=stderr
+
+# Expose both ports: HTTP (Nginx) and WebSocket (Reverb)
+EXPOSE 8080
+EXPOSE 80
