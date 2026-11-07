@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DocumentIcon } from '@heroicons/react/24/outline';
 import VerifyLayout, { Actions } from '../../../components/layout/VerifyLayout';
-import { useVerify } from '../../../context/VerifyContext'; 
-import { CLIENT_DOCS } from '../../../lib/verificationDocs'; 
+import { useVerify } from '../../../context/VerifyContext';
+import { useAuth } from '../../../context/AuthContext';
+import { CLIENT_DOCS } from '../../../lib/verificationDocs';
 
-// adjust to your actual routes
+import { submitVerification, buildVerificationFormData, verificationError } from '../../../api/verification';
+
 const ROUTES = {
   personal: '/verify/client/personal',
   contact: '/verify/client/contact',
@@ -59,19 +61,29 @@ function FilePreview({ file }) {
 
 export default function ClientReview() {
   const navigate = useNavigate();
-  const { data, files } = useVerify();
+  const { data, files, reset } = useVerify();
+  const { refreshUser } = useAuth();
   const [agreed, setAgreed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const fullName = [data.firstName, data.middleName, data.lastName].filter(Boolean).join(' ');
-  const dob = data.dob
-    ? new Date(`${data.dob}T00:00:00`).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
-    : '';
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: send `data` + `files` to your API here (use FormData for the files),
-    // then call reset() from useVerify() if you want to clear the form.
-    navigate(ROUTES.pending);
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      await submitVerification(buildVerificationFormData(data, files));
+      await refreshUser?.(); // dashboard banners switch to "pending" right away
+      reset();
+      navigate(ROUTES.pending);
+    } catch (err) {
+      setError(verificationError(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -86,7 +98,6 @@ export default function ClientReview() {
             <Item label="Full name" value={fullName} className="sm:col-span-2" />
             <Item label="Email address" value={data.email} className="sm:col-span-2" />
             <Item label="Gender" value={data.gender} />
-            <Item label="Date of birth" value={dob} />
             <Item label="Mobile number" value={data.mobile} />
           </dl>
         </Section>
@@ -127,7 +138,17 @@ export default function ClientReview() {
           </span>
         </label>
 
-        <Actions onBack={() => navigate(-1)} nextLabel="Submit application" nextDisabled={!agreed} />
+        {error && (
+          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+            {error}
+          </p>
+        )}
+
+        <Actions
+          onBack={() => navigate(-1)}
+          nextLabel={submitting ? 'Submitting...' : 'Submit application'}
+          nextDisabled={!agreed || submitting}
+        />
       </form>
     </VerifyLayout>
   );

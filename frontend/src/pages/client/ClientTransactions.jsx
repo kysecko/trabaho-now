@@ -5,12 +5,13 @@ import VerificationLock from '../../components/ui/VerificationLock';
 
 export default function ClientTransactions() {
     const { user } = useAuth();
-    const isVerified = user?.kycStatus === 'approved' || user?.isVerified === true;
+    
+    // FIXED: Check for snake_case from your Laravel backend
+    const isVerified = user?.verification_status === 'approved' || user?.is_verified === true;
 
     if (!isVerified) {
         return (
             <main className="w-full space-y-6">
-
                 <h1 className="text-2xl font-bold mb-6 text-gray-800">Transactions</h1>
                 <div className="mb-6 p-6 bg-linear-to-r from-gray-800 to-gray-900 rounded-xl text-white flex justify-between items-center shadow-md">
                     <div>

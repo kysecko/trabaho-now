@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 export default function Login() {
-  const { user, login } = useAuth();
+  const { user, login, logout } = useAuth(); // <-- Added logout
   const location = useLocation();
   const from = location.state?.from;
 
@@ -35,8 +35,15 @@ export default function Login() {
     setSubmitting(true);
     setErrors({});
     try {
+      // 1. CLEAR any stale session before logging in the new user
+      logout();                       // clears user state
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      // 2. Log in with the new account
       const data = await loginUser(form);
       await login(data.token, data.user);
+
       // Auth state updates → the `if (user)` guard above handles the redirect.
     } catch (err) {
       setErrors(err.errors || { form: [err.message] });

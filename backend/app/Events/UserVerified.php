@@ -13,6 +13,7 @@ class UserVerified implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $userId;
+    public $connection = 'sync'; // 👈 ADD THIS
 
     public function __construct($userId)
     {
@@ -21,13 +22,11 @@ class UserVerified implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        // Only this specific user can listen to this channel
         return new PrivateChannel('user.' . $this->userId);
     }
 
     public function broadcastAs()
     {
-        // A clean name for the frontend to listen to
         return 'UserVerified';
     }
 }

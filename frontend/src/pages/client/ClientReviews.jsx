@@ -1,34 +1,32 @@
 import React from 'react';
-import { StarIcon } from '@heroicons/react/24/outline';
+import { CreditCardIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 import VerificationLock from '../../components/ui/VerificationLock';
 
-export default function ClientReviews() {
+export default function ClientTransactions() {
     const { user } = useAuth();
-    const isVerified = user?.kycStatus === 'approved' || user?.isVerified === true;
+    
+    // FIXED: Check for snake_case from your Laravel backend
+    const isVerified = user?.verification_status === 'approved' || user?.is_verified === true;
 
     if (!isVerified) {
         return (
             <main className="w-full space-y-6">
-
-                <h1 className="text-2xl font-bold mb-6 text-gray-800">Reviews</h1>
-
-                <div className="mb-6 p-6 bg-white border border-gray-200 rounded-xl shadow-sm opacity-70 relative overflow-hidden">
-                    <div className="flex gap-1 text-yellow-400 mb-3">
-                        {[...Array(5)].map((_, i) => <StarIcon key={i} className="w-5 h-5 fill-current" />)}
+                <h1 className="text-2xl font-bold mb-6 text-gray-800">Transactions</h1>
+                <div className="mb-6 p-6 bg-linear-to-r from-gray-800 to-gray-900 rounded-xl text-white flex justify-between items-center shadow-md">
+                    <div>
+                        <p className="text-gray-400 text-sm mb-1">Available Credit Balance</p>
+                        <h2 className="text-3xl font-bold blur-sm select-none">₱ 1,250.00</h2>
                     </div>
-                    <p className="text-gray-600 italic text-lg">"Excellent service! Very professional and arrived on time. Highly recommended!"</p>
-                    <p className="text-sm font-bold text-gray-800 mt-4">— Maria S. (Verified Client)</p>
-
-                    <div className="absolute inset-0 bg-linear-to-t from-white via-white/90 to-transparent flex items-end justify-center pb-6">
-                        <span className="text-sm font-bold text-gray-500">Verify to see more reviews</span>
+                    <div className="flex items-center gap-2 text-sm font-semibold bg-white/20 px-3 py-1.5 rounded-lg">
+                        <LockClosedIcon className="w-4 h-4" />
+                        Locked
                     </div>
                 </div>
-
                 <VerificationLock
-                    title="Reviews & Reputation"
-                    Icon={StarIcon}
-                    description="Unverified accounts cannot leave or receive reviews. Complete your verification to build trust with the community and showcase your 5-star service."
+                    title="Transactions"
+                    Icon={CreditCardIcon}
+                    description="Financial transactions are restricted to verified accounts to prevent fraud. Verify your ID to cash in, withdraw, and pay workers securely."
                 />
             </main>
         );
@@ -36,18 +34,15 @@ export default function ClientReviews() {
 
     return (
         <main className="w-full space-y-6">
-            <h1 className="text-2xl font-bold mb-6 text-gray-800">Reviews</h1>
-            <div className="grid gap-4">
-                <div className="p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <div className="flex justify-between items-start mb-3">
-                        <div className="flex gap-1 text-yellow-400">
-                            {[...Array(5)].map((_, i) => <StarIcon key={i} className="w-5 h-5 fill-current" />)}
-                        </div>
-                        <span className="text-xs font-medium text-gray-400">Oct 24, 2026</span>
-                    </div>
-                    <p className="text-gray-700 text-base">"Great work fixing the pipes. Very clean and fast."</p>
-                    <p className="text-sm font-bold text-navy mt-4">— Ben T.</p>
+            <h1 className="text-2xl font-bold mb-6 text-gray-800">Transactions</h1>
+            <div className="mb-6 p-6 bg-linear-to-r from-navy to-navy-2 rounded-xl text-white flex justify-between items-center shadow-md">
+                <div>
+                    <p className="text-gray-300 text-sm mb-1">Available Credit Balance</p>
+                    <h2 className="text-3xl font-bold">₱ 1,250.00</h2>
                 </div>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <h3 className="font-bold text-gray-800 mb-4">Recent Transactions</h3>
             </div>
         </main>
     );

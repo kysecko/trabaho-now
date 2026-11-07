@@ -8,7 +8,7 @@ import {
   CheckIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../../context/AuthContext";
+import { useVerificationStatus } from "../../hooks/useVerificationStatus";
 
 const TYPES = {
   booking: { label: "Bookings", icon: BriefcaseIcon, tone: "bg-blue-50 text-blue-600" },
@@ -32,26 +32,24 @@ const SAMPLE = [
 ];
 
 export default function ClientNotifications() {
-  const { user } = useAuth();
+  const { isVerified } = useVerificationStatus();
   const [items, setItems] = useState(SAMPLE);
   const [filter, setFilter] = useState("all");
-
-  const isVerified = user?.is_verified === true || user?.verification_status === "approved";
 
   const unreadCount = items.filter((n) => !n.read).length;
 
   // Filter available tabs based on verification
   const availableTabs = useMemo(() => {
     if (isVerified) return ALL_TABS;
-    return ALL_TABS.filter(tab => ["all", "unread", "account"].includes(tab.key));
+    return ALL_TABS.filter((tab) => ["all", "unread", "account"].includes(tab.key));
   }, [isVerified]);
 
   const visible = useMemo(() => {
     let filtered = items;
-    
+
     // Hide booking/payment/review notifications if unverified
     if (!isVerified) {
-      filtered = filtered.filter(n => n.type === "account");
+      filtered = filtered.filter((n) => n.type === "account");
     }
 
     return filtered.filter((n) =>
@@ -119,7 +117,7 @@ export default function ClientNotifications() {
           </div>
           <h2 className="mt-4 text-base font-bold text-navy">Nothing here yet</h2>
           <p className="mt-1 max-w-xs text-sm text-muted">
-            {!isVerified 
+            {!isVerified
               ? "Verify your identity to start receiving booking and payment updates."
               : "Updates about your requests, payments and account will show up here."}
           </p>
