@@ -1,12 +1,31 @@
-# 5. Set production environment variables
-ENV APP_ENV=production
-ENV APP_DEBUG=false
-ENV LOG_CHANNEL=stderr
+FROM composer:2 AS vendor
 
-# 1. Switch to root to fix all permissions
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-interaction \
+    --no-progress \
+    --no-scripts
+
+COPY . .
+
+RUN composer dump-autoload --no-dev --optimize
+
+
+FROM ghcr.io/forlaravel/docker:latest-php8.4-fpm
+
+WORKDIR /app
+
+COPY --from=vendor /app /app
+
+# Switch to root to fix permissions
 USER root
 
-# 2. Ensure necessary directories exist and are writable
+# Create necessary directories
 RUN mkdir -p /app/storage/logs \
     /app/storage/framework/cache \
     /app/storage/framework/sessions \
@@ -15,10 +34,10 @@ RUN mkdir -p /app/storage/logs \
     /app/resources/views \
     && touch /app/storage/logs/laravel.log
 
-# 3. Give ownership of the ENTIRE app folder to www-data
+# Give ownership of the app to www-data
 RUN chown -R www-data:www-data /app
 
-# 4. Fix Nginx temporary directories (IMPORTANT for file uploads)
+# Fix Nginx temporary directories (this fixes the file upload 500 error)
 RUN mkdir -p /var/lib/nginx/tmp/client_body \
              /var/lib/nginx/tmp/proxy \
              /var/lib/nginx/tmp/fastcgi \
@@ -27,5 +46,10 @@ RUN mkdir -p /var/lib/nginx/tmp/client_body \
     && chown -R www-data:www-data /var/lib/nginx/tmp \
     && chmod -R 755 /var/lib/nginx/tmp
 
-# 5. Disable NPM build
+# Disable NPM build
 ENV NPM_BUILD=false
+
+# Production environment
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV LOG_CHANNEL=stderr
