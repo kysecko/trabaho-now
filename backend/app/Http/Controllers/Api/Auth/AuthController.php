@@ -18,9 +18,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // ─────────────────────────────────────────────────────────
     // Register — no token returned. User must verify email, then log in.
-    // ─────────────────────────────────────────────────────────
     public function register(Request $request)
     {
         $data = $request->validate([
@@ -34,21 +32,11 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Registration successful. Please verify your email.',
-            'user' => [
-                'id'                  => $user->id,
-                'name'                => $user->name,
-                'email'               => $user->email,
-                'role'                => $user->role,
-                'email_verified_at'   => $user->email_verified_at,
-                'is_verified'         => (bool) $user->is_verified,
-                'verification_status' => $user->verification_status ?? 'none',
-            ],
+            'user'    => $user->toAuthArray(),
         ], 201);
     }
 
-    // ─────────────────────────────────────────────────────────
     // Login — blocks unverified users.
-    // ─────────────────────────────────────────────────────────
     public function login(Request $request)
     {
         $data = $request->validate([
@@ -73,21 +61,11 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $user->createToken('web')->plainTextToken,
-            'user' => [
-                'id'                  => $user->id,
-                'name'                => $user->name,
-                'email'               => $user->email,
-                'role'                => $user->role,
-                'email_verified_at'   => $user->email_verified_at,
-                'is_verified'         => (bool) $user->is_verified,
-                'verification_status' => $user->verification_status ?? 'none',
-            ],
+            'user'  => $user->toAuthArray(),
         ]);
     }
 
-    // ─────────────────────────────────────────────────────────
     // Logout
-    // ─────────────────────────────────────────────────────────
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -95,9 +73,7 @@ class AuthController extends Controller
         return response()->noContent();
     }
 
-    // ─────────────────────────────────────────────────────────
     // Send OTP — public, identified by email in the request body.
-    // ─────────────────────────────────────────────────────────
     public function sendOtp(Request $request)
     {
         $request->validate([
@@ -152,9 +128,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Verification code sent.']);
     }
 
-    // ─────────────────────────────────────────────────────────
     // Verify OTP — public, identified by email + code in body.
-    // ─────────────────────────────────────────────────────────
     public function verifyOtp(Request $request)
     {
         $request->validate([
@@ -200,21 +174,11 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Email verified. You can now log in.',
-            'user' => [
-                'id'                  => $user->id,
-                'name'                => $user->name,
-                'email'               => $user->email,
-                'role'                => $user->role,
-                'email_verified_at'   => $user->email_verified_at,
-                'is_verified'         => (bool) $user->is_verified,
-                'verification_status' => $user->verification_status ?? 'none',
-            ],
+            'user'    => $user->toAuthArray(),
         ]);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Forgot password — unchanged.
-    // ─────────────────────────────────────────────────────────
+    // Forgot password .
     public function forgotPassword(Request $request)
     {
         $request->validate(['email' => 'required|email']);
@@ -248,9 +212,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Reset password — unchanged.
-    // ─────────────────────────────────────────────────────────
+    // Reset password.
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -280,9 +242,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Password updated. You can now log in.']);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Mail helper — unchanged.
-    // ─────────────────────────────────────────────────────────
+    // Mail helper.
     private function sendMail(string $toEmail, ?string $toName, string $subject, string $html, string $text): void
     {
         $res = Http::timeout(20)

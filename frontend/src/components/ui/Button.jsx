@@ -14,8 +14,12 @@ const variants = {
   danger:
     "bg-danger text-white hover:bg-red-700 focus:ring-danger",
 
+
   ghost:
     "bg-transparent text-primary hover:bg-primary-soft focus:ring-primary",
+
+  neutral:
+    "border border-gray-300 bg-white text-navy hover:bg-gray-50 focus:ring-gray-300",
 };
 
 const sizes = {
@@ -23,6 +27,7 @@ const sizes = {
   md: "px-4 py-2.5 text-sm gap-2",
   lg: "px-5 py-3 text-base gap-2.5",
   xl: "px-6 py-3.5 text-base gap-3",
+  form: "h-10 px-6 text-sm gap-2",
 };
 
 export default function Button({

@@ -49,7 +49,7 @@ export default function AdminLayout() {
     { to: "/admin/credits", label: "Credit Management", icon: CreditCardIcon, activeIcon: CreditCardSolid },
     { to: "/admin/services", label: "Service Listings", icon: WrenchScrewdriverIcon, activeIcon: WrenchScrewdriverSolid },
     { to: "/admin/reports", label: "Reports", icon: ChartBarIcon, activeIcon: ChartBarSolid },
-    { to: "/admin/settings", label: "System Settings", icon: Cog6ToothIcon, activeIcon: Cog6ToothSolid },
+    { to: "/admin/settings", label: "Profile Settings", icon: Cog6ToothIcon, activeIcon: Cog6ToothSolid },
   ];
 
   // tab header indicator

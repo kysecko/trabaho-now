@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Admin\VerificationReviewController;
 
 require __DIR__ . '/api/auth.php';
 
@@ -20,30 +21,28 @@ Route::prefix('public')->group(function () {
     require __DIR__ . '/api/public.php';
 });
 
+// Admin document viewer. NOT behind auth: <img src> can't send a bearer token.
+// The `signed` middleware makes each link expire (10 min) and be tamper-proof.
+Route::get('/admin/verifications/{verification}/documents/{key}',
+    [VerificationReviewController::class, 'document'])
+    ->name('admin.verifications.document')
+    ->middleware('signed');
+
 // ─────────────────────────────────────────────────────────────
 // Authenticated endpoints (require a Sanctum bearer token).
 // ─────────────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/user', function (Request $request) {
-        $user = $request->user();
-
-        return response()->json([
-            'id'                  => $user->id,
-            'name'                => $user->name,
-            'email'               => $user->email,
-            'role'                => $user->role,
-            'email_verified_at'   => $user->email_verified_at,
-            'is_verified'         => (bool) $user->is_verified,
-            'verification_status' => $user->verification_status ?? 'none',
-        ]);
-    });
+    Route::get('/user', fn (Request $request) => response()->json($request->user()->toAuthArray()));
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::middleware('verified')->group(function () {
+        // Shared routes include the verification submit, so they must stay
+        // OUTSIDE `verified.identity` (unverified users need to reach them).
         require __DIR__ . '/api/shared.php';
 
+        // Anything that needs an approved identity goes here (hiring, requests...).
         Route::middleware('verified.identity')->group(function () {
             // require __DIR__ . '/api/client.php';
             // require __DIR__ . '/api/jobseeker.php';

@@ -97,7 +97,7 @@ export default function VerifyEmail() {
 
   const autoSent = useRef(false);
 
-  // No email in route state → nothing to verify, back to register.
+  // No email in route state -> nothing to verify, back to register.
   useEffect(() => {
     if (!email) {
       navigate("/register", { replace: true });
@@ -110,7 +110,7 @@ export default function VerifyEmail() {
     setCode("");
     setResending(true);
     try {
-      await sendOtp(email);
+      await sendOtp(email);        // ← no token check, pass email
       setCooldown(60);
     } catch (err) {
       setError(err.message || "Failed to send code. Please try again.");
@@ -141,8 +141,7 @@ export default function VerifyEmail() {
     setBusy(true);
     setError("");
     try {
-      await verifyOtp(email, code);
-      // Success → send them to login with the email prefilled + banner.
+      await verifyOtp(email, code);   
       navigate("/login", {
         replace: true,
         state: { email, verified: true },
