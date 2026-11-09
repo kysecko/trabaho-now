@@ -6,7 +6,7 @@ export default function VerificationLayout() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC] flex flex-col">
+    <div className="min-h-screen bg-main-bg flex flex-col">
       <header className="bg-white border-b border-gray-200 px-4 sm:px-6 h-16 flex items-center justify-between sticky top-0 z-50">
         <button 
           onClick={() => navigate('/client/dashboard')} 

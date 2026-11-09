@@ -46,7 +46,6 @@ export default function AdminLayout() {
     { to: "/admin/manage-users", label: "User Management", icon: UsersIcon, activeIcon: UsersSolid },
     { to: "/admin/verification", label: "Verification Queue", icon: ShieldCheckIcon, activeIcon: ShieldCheckSolid },
     { to: "/admin/transactions", label: "Transaction Logs", icon: DocumentTextIcon, activeIcon: DocumentTextSolid },
-    { to: "/admin/credits", label: "Credit Management", icon: CreditCardIcon, activeIcon: CreditCardSolid },
     { to: "/admin/services", label: "Service Listings", icon: WrenchScrewdriverIcon, activeIcon: WrenchScrewdriverSolid },
     { to: "/admin/reports", label: "Reports", icon: ChartBarIcon, activeIcon: ChartBarSolid },
     { to: "/admin/settings", label: "Profile Settings", icon: Cog6ToothIcon, activeIcon: Cog6ToothSolid },
@@ -58,7 +57,6 @@ export default function AdminLayout() {
     if (pathname.includes("/manage-users")) return "User Management";
     if (pathname.includes("/verification")) return "Verification Queue";
     if (pathname.includes("/transactions")) return "Transaction Logs";
-    if (pathname.includes("/credits")) return "Credit Management";
     if (pathname.includes("/services")) return "Service Listings";
     if (pathname.includes("/reports")) return "Reports";
     if (pathname.includes("/settings")) return "System Settings";
