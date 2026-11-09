@@ -1,95 +1,302 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  CheckCircleIcon, 
-  ClockIcon, 
-  BanknotesIcon, 
-  BriefcaseIcon, 
-  StarIcon,
-  PowerIcon
+import {
+  BriefcaseIcon,
+  ClockIcon,
+  CalendarDaysIcon,
+  CheckCircleIcon,
+  PlusIcon,
+  ChevronRightIcon,
+  UserIcon,
+  InboxIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
+import { useVerificationStatus } from "../../hooks/useVerificationStatus";
+import Button from "../../components/ui/Button";
+import LockedState from "../../components/ui/dashboard/LockedState";
 
-export default function JobseekerDashboard() {
+// Adjust these to your real jobseeker routes
+const ROUTES = {
+  posts: "/jobseeker/posts",
+  requests: "/jobseeker/requests",
+  calendar: "/jobseeker/calendar",
+  settings: "/jobseeker/settings",
+};
+
+const daysFromNow = (n) => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + n);
+  return d;
+};
+
+/* Demo data. Pass real data through the props instead:
+   <JobseekerDashboard requests={[...]} stats={{ activePosts, activeRequests, completed }} /> */
+const DEMO_REQUESTS = [
+  { id: 1, client: "Jericho Cordesa", service: "Plumbing Repair", date: daysFromNow(2), photo: null },
+  { id: 2, client: "Michael Santos", service: "Aircon Cleaning", date: daysFromNow(5), photo: null },
+  { id: 3, client: "Ana Lim", service: "Electrical Wiring", date: daysFromNow(8), photo: null },
+];
+const DEMO_STATS = { activePosts: 3, activeRequests: 2, completed: 14 };
+const DEMO_UPCOMING = [
+  { id: 1, title: "Aircon Cleaning", when: "Today, 2:00 PM", tone: "bg-blue-50 text-blue-600" },
+  { id: 2, title: "Plumbing Repair", when: "Tomorrow, 9:00 AM", tone: "bg-green-50 text-green-600" },
+];
+
+const STAT_ITEMS = [
+  { key: "activePosts", label: "Active Job Post", Icon: BriefcaseIcon },
+  { key: "activeRequests", label: "Active Requests", Icon: ClockIcon },
+  { key: "pending", label: "Pending Request", Icon: CalendarDaysIcon },
+  { key: "completed", label: "Completed Requests", Icon: CheckCircleIcon },
+];
+
+const fmtDate = (value) =>
+  new Date(value).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+const initials = (name = "") =>
+  name.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+
+function Avatar({ name, photo }) {
+  if (photo) {
+    return <img src={photo} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover" />;
+  }
+  return (
+    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-soft text-lg font-bold text-primary">
+      {initials(name)}
+    </div>
+  );
+}
+
+function RequestRow({ request: r, confirming, onReview, onAskDecline, onCancelDecline, onConfirmDecline }) {
+  return (
+    <article className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+      <div className="flex min-w-0 items-center gap-4">
+        <Avatar name={r.client} photo={r.photo} />
+        <div className="min-w-0">
+          <h3 className="truncate text-lg font-bold text-navy">{r.service}</h3>
+          <p className="text-xs text-muted">Client: {r.client}</p>
+          <p className="text-xs text-muted">Requested for {fmtDate(r.date)}</p>
+        </div>
+      </div>
+
+      {confirming ? (
+        <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+          <span className="text-sm font-semibold text-gray-700">Decline this request?</span>
+          <button
+            type="button"
+            onClick={onCancelDecline}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            Keep
+          </button>
+          <button
+            type="button"
+            onClick={onConfirmDecline}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700"
+          >
+            Yes, decline
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-3 sm:justify-end">
+          <Button size="sm" onClick={onReview}>Review Request</Button>
+          <button
+            type="button"
+            onClick={onAskDecline}
+            className="rounded-lg border border-red-500 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+          >
+            Decline Request
+          </button>
+        </div>
+      )}
+    </article>
+  );
+}
+
+export default function JobseekerDashboard({
+  requests: initialRequests = null,
+  stats: statsOverride = null,
+  upcoming = DEMO_UPCOMING,
+  profile = { percent: 80, done: 4, total: 5 },
+  onDecline,
+}) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  
-  const isVerified = user?.is_verified === true || user?.verification_status === 'approved';
-  const isPending = user?.verification_status === 'pending';
-  
-  // Local state for availability toggle
-  const [isOnline, setIsOnline] = useState(user?.availability_status === 'available');
+  const { isVerified } = useVerificationStatus();
+
+  const [requests, setRequests] = useState(() => initialRequests ?? DEMO_REQUESTS);
+  const [confirmId, setConfirmId] = useState(null);
+  const [toast, setToast] = useState("");
+  const toastTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  const stats = useMemo(
+    () => ({ ...DEMO_STATS, ...statsOverride, pending: requests.length }),
+    [statsOverride, requests.length]
+  );
 
   if (!isVerified) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center min-h-125 text-center">
-        {isPending ? (
-          <div className="bg-yellow-50 border border-yellow-200 p-8 rounded-2xl max-w-md w-full">
-            <ClockIcon className="w-16 h-16 text-yellow-600 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-yellow-800 mb-2">Verification Under Review</h2>
-            <p className="text-yellow-700 mb-6">
-              We are reviewing your ID. This usually takes 24-48 hours. You will be able to publish services and accept jobs once approved.
-            </p>
-            <button onClick={() => navigate('/client/dashboard')} className="bg-yellow-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-yellow-700">
-              Return to Client Dashboard
-            </button>
-          </div>
-        ) : (
-          <div className="bg-white border border-gray-200 p-8 rounded-2xl shadow-sm max-w-md w-full">
-            <BriefcaseIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Account Not Verified</h2>
-            <p className="text-gray-500 mb-6">
-              You must verify your identity before you can access the worker dashboard and start earning.
-            </p>
-            <button onClick={() => navigate('/verify')} className="bg-[#ff4d00] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#e64500]">
-              Verify Now
-            </button>
-          </div>
-        )}
-      </div>
+      <LockedState
+        icon={BriefcaseIcon}
+        title="Account not verified"
+        text="You must verify your identity before you can open the worker dashboard and start earning."
+      />
     );
   }
 
+  const firstName = user?.name?.split(" ")[0] || "there";
+
+  const decline = (r) => {
+    setRequests((list) => list.filter((x) => x.id !== r.id));
+    setConfirmId(null);
+    onDecline?.(r);
+    setToast("Request declined.");
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(""), 2600);
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Welcome & Status Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Jobseeker Dashboard</h1>
-          <p className="text-gray-500">Welcome back, {user?.name}. Here is your earnings analytics.</p>
+    <div className="space-y-6 pb-10">
+      {/* Welcome banner */}
+      <section className="relative overflow-hidden rounded-2xl bg-linear-to-r from-primary to-red-700 p-6 text-white shadow-sm sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold sm:text-3xl">Welcome Back, {firstName}!</h1>
+            <p className="mt-1 text-sm text-white/85">Ready to receive direct requests in Sta. Maria, Bulacan.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.posts)}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary shadow-sm transition hover:bg-orange-50"
+          >
+            <PlusIcon className="h-5 w-5" /> Add New Post
+          </button>
         </div>
-        
-        {/* Online/Offline Toggle */}
-        <button 
-          onClick={() => setIsOnline(!isOnline)}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition shadow-sm border ${
-            isOnline 
-              ? "bg-green-50 text-green-700 border-green-200" 
-              : "bg-gray-100 text-gray-600 border-gray-300"
-          }`}
-        >
-          <PowerIcon className="w-5 h-5" />
-          {isOnline ? "You are Online (Available)" : "You are Offline (Busy)"}
-        </button>
+      </section>
+
+      {/* Stats */}
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Summary">
+        {STAT_ITEMS.map(({ key, label, Icon }) => (
+          <div key={key} className="flex items-center gap-3 rounded-xl bg-slate-100 p-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-sm">
+              <Icon className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-xs text-muted">{label}</p>
+              <p className="text-2xl font-extrabold text-navy">{stats[key]}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Recent requests */}
+        <section>
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-navy">Recent Service Request</h2>
+              <p className="text-xs text-muted">Direct requests from clients waiting for your response.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.requests)}
+              className="shrink-0 text-sm font-semibold text-primary hover:underline"
+            >
+              Visit All
+            </button>
+          </div>
+
+          {requests.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+              <InboxIcon className="mx-auto h-12 w-12 text-gray-300" />
+              <p className="mt-3 font-bold text-navy">You’re all caught up</p>
+              <p className="mt-1 text-sm text-muted">New requests from clients will show up here.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {requests.map((r) => (
+                <RequestRow
+                  key={r.id}
+                  request={r}
+                  confirming={confirmId === r.id}
+                  onReview={() => navigate(ROUTES.requests)}
+                  onAskDecline={() => setConfirmId(r.id)}
+                  onCancelDecline={() => setConfirmId(null)}
+                  onConfirmDecline={() => decline(r)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Side column */}
+        <div className="space-y-6">
+          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-navy">Upcoming Jobs</h2>
+              <button
+                type="button"
+                onClick={() => navigate(ROUTES.calendar)}
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Calendar
+              </button>
+            </div>
+
+            {upcoming.length === 0 ? (
+              <p className="mt-3 text-sm text-muted">No upcoming jobs yet.</p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {upcoming.map((j) => (
+                  <li key={j.id} className="flex items-center gap-3">
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${j.tone}`}>
+                      <BriefcaseIcon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-navy">{j.title}</p>
+                      <p className="text-xs text-muted">{j.when}</p>
+                    </div>
+                    <ChevronRightIcon className="h-5 w-5 text-gray-300" />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-2xl bg-linear-to-br from-navy to-navy-2 p-5 text-white shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-white/10 p-2">
+                <UserIcon className="h-5 w-5" />
+              </span>
+              <h2 className="text-lg font-bold">Profile Strength</h2>
+            </div>
+            <p className="mt-3 text-sm text-gray-300">Complete your profile to rank higher in client searches.</p>
+            <div className="mt-4 flex justify-between text-sm font-bold">
+              <span>{profile.percent}% complete</span>
+              <span>{profile.done}/{profile.total} steps</span>
+            </div>
+            <div className="mt-2 h-2 w-full rounded-full bg-white/20" role="progressbar" aria-valuenow={profile.percent} aria-valuemin={0} aria-valuemax={100}>
+              <div className="h-2 rounded-full bg-primary" style={{ width: `${profile.percent}%` }} />
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.settings)}
+              className="mt-4 w-full rounded-xl bg-white py-2.5 text-sm font-bold text-navy transition hover:bg-gray-100"
+            >
+              Complete profile
+            </button>
+          </section>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <BanknotesIcon className="w-8 h-8 text-[#ff4d00] mb-3" />
-          <p className="text-sm font-semibold text-gray-500">Total Earnings</p>
-          <p className="text-2xl font-bold text-gray-900">₱12,300</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <BriefcaseIcon className="w-8 h-8 text-blue-500 mb-3" />
-          <p className="text-sm font-semibold text-gray-500">Active Jobs</p>
-          <p className="text-2xl font-bold text-gray-900">2</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <StarIcon className="w-8 h-8 text-yellow-500 mb-3" />
-          <p className="text-sm font-semibold text-gray-500">Average Rating</p>
-          <p className="text-2xl font-bold text-gray-900">4.9</p>
-        </div>
+      <div
+        role="status"
+        className={`pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-opacity ${
+          toast ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        {toast}
       </div>
     </div>
   );

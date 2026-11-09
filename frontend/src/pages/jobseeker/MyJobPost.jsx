@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import {
   WrenchScrewdriverIcon,
   PlusIcon,
@@ -7,9 +6,9 @@ import {
   PencilSquareIcon,
   TrashIcon,
   XMarkIcon,
-  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../../context/AuthContext";
+import { useVerificationStatus } from "../../hooks/useVerificationStatus";
+import LockedState from "../../components/ui/dashboard/LockedState";
 
 /* Same service list the clients filter by on Find Jobseekers */
 const CATEGORIES = [
@@ -32,88 +31,35 @@ const RATE_UNITS = [
 const MAX_DESC = 300;
 
 const DEMO_SERVICES = [
-  { id: 1, title: "Aircon Cleaning & Repair", category: "Aircon service", description: "Split-type and window units. Cleaning, freon refill, and repair. I bring my own tools.", rate: 800, rateUnit: "job", status: "active", views: 128, requests: 14 },
-  { id: 2, title: "General Carpentry", category: "Carpentry", description: "Cabinets, doors, shelves, and furniture repair.", rate: 500, rateUnit: "hour", status: "active", views: 64, requests: 5 },
-  { id: 3, title: "House Painting", category: "Painting", description: "", rate: 1500, rateUnit: "day", status: "hidden", views: 0, requests: 0 },
+  { id: 1, title: "Aircon Cleaning & Repair", category: "Aircon service", description: "Split-type and window units. Cleaning, freon refill, and repair. I bring my own tools.", rate: 800, rateUnit: "job", views: 128, requests: 14 },
+  { id: 2, title: "General Carpentry", category: "Carpentry", description: "Cabinets, doors, shelves, and furniture repair.", rate: 500, rateUnit: "hour", views: 64, requests: 5 },
+  { id: 3, title: "House Painting", category: "Painting", description: "", rate: 1500, rateUnit: "day", views: 0, requests: 0 },
 ];
 
-const EMPTY_FORM = { title: "", category: "", description: "", rate: "", rateUnit: "job", status: "active" };
+const EMPTY_FORM = { title: "", category: "", description: "", rate: "", rateUnit: "job" };
 
 const peso = (n) => `₱${Number(n).toLocaleString("en-PH")}`;
 const unitLabel = (u) => RATE_UNITS.find((r) => r.value === u)?.label ?? `per ${u}`;
 
-/* ---------------------------- locked view ---------------------------- */
-function LockedState({ onVerify }) {
-  return (
-    <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center p-6 text-center">
-      <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-        <WrenchScrewdriverIcon className="h-10 w-10 text-gray-400" />
-      </div>
-      <h2 className="mb-2 text-xl font-bold text-navy">Services are locked</h2>
-      <p className="mb-6 text-sm text-muted">
-        Verify your identity to create service posts and appear in client searches.
-      </p>
-      <button
-        type="button"
-        onClick={onVerify}
-        className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-primary-hover"
-      >
-        Verify now
-      </button>
-    </div>
-  );
-}
-
-/* ---------------------------- live switch ---------------------------- */
-function LiveSwitch({ on, onChange, label }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      onClick={onChange}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-        on ? "bg-green-500" : "bg-gray-300"
-      }`}
-    >
-      <span
-        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-          on ? "translate-x-5" : "translate-x-0.5"
-        }`}
-      />
-    </button>
-  );
-}
-
 /* ---------------------------- service card --------------------------- */
-function ServiceCard({ service: s, onToggle, onEdit, onView }) {
-  const live = s.status === "active";
+function ServiceCard({ service: s, onEdit, onView }) {
   return (
-    <article className={`rounded-2xl border bg-white p-5 shadow-sm ${live ? "border-gray-200" : "border-dashed border-gray-300"}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-lg font-bold text-navy">{s.title}</h3>
-            <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">{s.category}</span>
-          </div>
-          <p className={`mt-1 line-clamp-2 text-sm ${s.description ? "text-gray-600" : "italic text-muted"}`}>
-            {s.description || "No description yet. Add one so clients know what to expect."}
-          </p>
+    <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="truncate text-lg font-bold text-navy">{s.title}</h3>
+          <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">{s.category}</span>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <LiveSwitch on={live} onChange={() => onToggle(s)} label={`${live ? "Hide" : "Publish"} ${s.title}`} />
-          <span className={`text-xs font-bold ${live ? "text-green-700" : "text-gray-500"}`}>{live ? "Live" : "Hidden"}</span>
-        </div>
+        <p className={`mt-1 line-clamp-2 text-sm ${s.description ? "text-gray-600" : "italic text-muted"}`}>
+          {s.description || "No description yet. Add one so clients know what to expect."}
+        </p>
       </div>
 
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4 border-t border-gray-100 pt-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <div>
-            <p className="text-xl font-extrabold text-navy">
-              {peso(s.rate)} <span className="text-sm font-medium text-muted">{unitLabel(s.rateUnit)}</span>
-            </p>
-          </div>
+          <p className="text-xl font-extrabold text-navy">
+            {peso(s.rate)} <span className="text-sm font-medium text-muted">{unitLabel(s.rateUnit)}</span>
+          </p>
           <dl className="flex gap-5 text-sm">
             <div>
               <dt className="text-xs text-muted">Views</dt>
@@ -196,7 +142,6 @@ function ServiceModal({ service, onClose, onSave, onDelete }) {
     "w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-gray-800 focus-visible:outline-2 focus-visible:outline-primary";
   const border = (name) => (errors[name] ? "border-red-400" : "border-gray-300");
   const label = "mb-1 block text-sm font-semibold text-navy";
-  const live = form.status === "active";
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
@@ -309,17 +254,7 @@ function ServiceModal({ service, onClose, onSave, onDelete }) {
           {errors.description && <p className="mt-1 text-xs font-semibold text-red-600">{errors.description}</p>}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-gray-200 p-3">
-          <div>
-            <p className="text-sm font-semibold text-navy">{live ? "Live to the public" : "Hidden from clients"}</p>
-            <p className="text-xs text-muted">
-              {live ? "Clients can find and request this service." : "Only you can see it until you publish."}
-            </p>
-          </div>
-          <LiveSwitch on={live} onChange={() => set("status", live ? "hidden" : "active")} label="Publish this service" />
-        </div>
-
-        {/* Live preview */}
+        {/* Preview */}
         <div className="mt-4">
           <p className="mb-1 text-xs font-semibold text-muted">How clients see it</p>
           <div className="rounded-xl bg-gray-50 p-3">
@@ -385,9 +320,7 @@ function ServiceModal({ service, onClose, onSave, onDelete }) {
 
 /* -------------------------------- page ------------------------------- */
 export default function MyJobPost({ initialServices = null, onChange, onView }) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const isVerified = user?.is_verified === true || user?.verification_status === "approved";
+  const { isVerified } = useVerificationStatus();
 
   const [services, setServices] = useState(initialServices ?? DEMO_SERVICES);
   const [modal, setModal] = useState(null); // null | "new" | service object
@@ -396,9 +329,15 @@ export default function MyJobPost({ initialServices = null, onChange, onView }) 
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
-  const liveCount = useMemo(() => services.filter((s) => s.status === "active").length, [services]);
-
-  if (!isVerified) return <LockedState onVerify={() => navigate("/verify")} />;
+  if (!isVerified) {
+    return (
+      <LockedState
+        icon={WrenchScrewdriverIcon}
+        title="Services are locked"
+        text="Verify your identity to create service posts and appear in client searches."
+      />
+    );
+  }
 
   const notify = (msg) => {
     setToast(msg);
@@ -410,18 +349,13 @@ export default function MyJobPost({ initialServices = null, onChange, onView }) 
     onChange?.(next);
   };
 
-  const toggle = (s) => {
-    const status = s.status === "active" ? "hidden" : "active";
-    commit(services.map((x) => (x.id === s.id ? { ...x, status } : x)));
-    notify(status === "active" ? `“${s.title}” is now live.` : `“${s.title}” is hidden from clients.`);
-  };
   const save = (data) => {
     if (data.id) {
       commit(services.map((x) => (x.id === data.id ? { ...x, ...data } : x)));
       notify("Service updated.");
     } else {
       commit([{ ...data, id: Date.now(), views: 0, requests: 0 }, ...services]);
-      notify(data.status === "active" ? "Service added and live." : "Service saved as hidden.");
+      notify("Service added.");
     }
     setModal(null);
   };
@@ -440,7 +374,7 @@ export default function MyJobPost({ initialServices = null, onChange, onView }) 
           <p className="mt-1 text-sm text-muted">
             {services.length === 0
               ? "Add the services you offer so clients can find you."
-              : `${services.length} service${services.length === 1 ? "" : "s"} · ${liveCount} live`}
+              : `${services.length} service${services.length === 1 ? "" : "s"} posted`}
           </p>
         </div>
         <button
@@ -451,13 +385,6 @@ export default function MyJobPost({ initialServices = null, onChange, onView }) 
           <PlusIcon className="h-5 w-5" /> Add service
         </button>
       </div>
-
-      {services.length > 0 && liveCount === 0 && (
-        <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
-          <InformationCircleIcon className="mt-0.5 h-5 w-5 shrink-0" />
-          <p>None of your services are live, so clients can’t find you in search. Turn one on to start getting requests.</p>
-        </div>
-      )}
 
       {services.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
@@ -477,7 +404,7 @@ export default function MyJobPost({ initialServices = null, onChange, onView }) 
       ) : (
         <div className="grid gap-4">
           {services.map((s) => (
-            <ServiceCard key={s.id} service={s} onToggle={toggle} onEdit={setModal} onView={view} />
+            <ServiceCard key={s.id} service={s} onEdit={setModal} onView={view} />
           ))}
         </div>
       )}
