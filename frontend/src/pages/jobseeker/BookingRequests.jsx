@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   InboxIcon,
   MapPinIcon,
@@ -10,7 +9,8 @@ import {
   ExclamationTriangleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useAuth } from "../../context/AuthContext";
+import { useVerificationStatus } from "../../hooks/useVerificationStatus";
+import LockedState from "../../components/ui/dashboard/LockedState";
 
 const daysFromNow = (n) => {
   const d = new Date();
@@ -121,11 +121,10 @@ function DeclineModal({ request, onClose, onConfirm }) {
               type="button"
               aria-pressed={reason === r}
               onClick={() => setReason(reason === r ? "" : r)}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
-                reason === r
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${reason === r
                   ? "border-primary bg-primary-soft text-primary"
                   : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-              }`}
+                }`}
             >
               {r}
             </button>
@@ -159,9 +158,8 @@ function RequestCard({ request: r, onAccept, onDecline }) {
 
   return (
     <article
-      className={`rounded-2xl border border-gray-200 bg-white p-5 shadow-sm ${
-        pending && r.severity === "emergency" ? "border-l-4 border-l-red-500" : ""
-      }`}
+      className={`rounded-2xl border border-gray-200 bg-white p-5 shadow-sm ${pending && r.severity === "emergency" ? "border-l-4 border-l-red-500" : ""
+        }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
@@ -236,9 +234,7 @@ function RequestCard({ request: r, onAccept, onDecline }) {
 }
 
 export default function BookingRequests({ initialRequests = null, onAccept, onDecline }) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const isVerified = user?.is_verified === true || user?.verification_status === "approved";
+  const { isVerified } = useVerificationStatus();
 
   const [requests, setRequests] = useState(() =>
     (initialRequests ?? DEMO_REQUESTS).map((r) => ({ status: "pending", reason: "", ...r }))
@@ -267,25 +263,13 @@ export default function BookingRequests({ initialRequests = null, onAccept, onDe
 
   if (!isVerified) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center p-6 text-center">
-        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-          <InboxIcon className="h-10 w-10 text-gray-400" />
-        </div>
-        <h2 className="mb-2 text-xl font-bold text-navy">Requests are locked</h2>
-        <p className="mb-6 text-sm text-muted">
-          Verify your identity to receive and accept booking requests from clients.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate("/verify")}
-          className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-primary-hover"
-        >
-          Verify now
-        </button>
-      </div>
+      <LockedState
+        icon={InboxIcon}
+        title="Requests are locked"
+        text="Verify your identity to receive and accept booking requests from clients."
+      />
     );
   }
-
   const showToast = (msg, undoId = null) => {
     setToast({ msg, undoId });
     clearTimeout(toastTimer.current);
@@ -347,15 +331,13 @@ export default function BookingRequests({ initialRequests = null, onAccept, onDe
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-bold transition ${
-              tab === t.key ? "border-primary text-primary" : "border-transparent text-muted hover:text-navy"
-            }`}
+            className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-bold transition ${tab === t.key ? "border-primary text-primary" : "border-transparent text-muted hover:text-navy"
+              }`}
           >
             {t.label}
             <span
-              className={`rounded-full px-2 py-0.5 text-xs ${
-                t.key === "pending" && counts.pending > 0 ? "bg-primary text-white" : "bg-gray-100 text-gray-600"
-              }`}
+              className={`rounded-full px-2 py-0.5 text-xs ${t.key === "pending" && counts.pending > 0 ? "bg-primary text-white" : "bg-gray-100 text-gray-600"
+                }`}
             >
               {counts[t.key]}
             </span>

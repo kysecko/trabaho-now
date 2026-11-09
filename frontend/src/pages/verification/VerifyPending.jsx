@@ -2,35 +2,13 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ClockIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
-import echo from '../../lib/echo';
 
 export default function VerifyPending() {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
   const hasRedirected = useRef(false);
 
-  // 1. Listen for real-time verification events
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = echo.private(`user.${user.id}`);
-
-    channel.listen('.UserVerified', async () => {
-      console.log('✅ Verification approved via WebSocket');
-      await refreshUser();
-    });
-
-    channel.listen('.UserRejected', async () => {
-      console.log('❌ Verification rejected via WebSocket');
-      await refreshUser();
-    });
-
-    return () => {
-      echo.leave(`user.${user.id}`);
-    };
-  }, [user?.id, refreshUser]);
-
-  // 2. Poll as a fallback in case WebSocket fails
+  // Poll as a fallback to check approval status
   useEffect(() => {
     const interval = setInterval(() => {
       refreshUser();
@@ -38,7 +16,7 @@ export default function VerifyPending() {
     return () => clearInterval(interval);
   }, [refreshUser]);
 
-  // 3. Redirect based on status
+  // Redirect based on status
   useEffect(() => {
     if (!user || hasRedirected.current) return;
 
@@ -52,7 +30,7 @@ export default function VerifyPending() {
     }
   }, [user, navigate]);
 
-  // 4. Show rejection screen if rejected
+  // Show rejection screen if rejected
   if (user?.verification_status === 'rejected') {
     return (
       <div className="max-w-xl mx-auto py-20 px-4 text-center">
@@ -80,7 +58,7 @@ export default function VerifyPending() {
     );
   }
 
-  // 5. Default: Pending screen
+  // Default: Pending screen
   return (
     <div className="max-w-xl mx-auto py-20 px-4 text-center">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10">
