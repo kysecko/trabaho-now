@@ -240,7 +240,7 @@ export default function JobseekerDashboard({
                 onClick={() => navigate(ROUTES.calendar)}
                 className="text-sm font-semibold text-primary hover:underline"
               >
-                Calendar
+                See All
               </button>
             </div>
 

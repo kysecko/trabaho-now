@@ -9,12 +9,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
-/* ------------------------------------------------------------------ */
-/* Demo jobs. Dates are relative to today so the calendar is always   */
-/* populated. Pass real jobs in the `events` prop instead:            */
-/*   [{ id, date: "2026-11-05", title, client, time, type, location }]*/
-/*   type is "scheduled" | "emergency" | "backjob"                    */
-/* ------------------------------------------------------------------ */
+
 const MOCK_EVENTS = [
   { id: 1, offset: -2, title: "Repaint gate", client: "Rosa Dizon", time: "9:00 AM", type: "scheduled", location: "Brgy. Muzon" },
   { id: 2, offset: 0, title: "Install ceiling fan", client: "Pedro Reyes", time: "1:00 PM", type: "scheduled", location: "Brgy. Citrus" },

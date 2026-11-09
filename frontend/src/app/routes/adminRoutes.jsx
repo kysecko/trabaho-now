@@ -22,7 +22,7 @@ export default function AdminRoutes() {
         <Route path="manage-users" element={<UserManagement />} />
         <Route path="verification" element={<VerificationQueue />} />
         <Route path="transactions" element={<TransactionLogs />} />
-        <Route path="credits" element={<CreditManagement />} />
+       
         <Route path="services" element={<ServiceListings />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />

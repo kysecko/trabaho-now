@@ -7,7 +7,7 @@ export default function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC] px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-main-bg px-4 py-12 sm:px-6 lg:px-8">
       <div className="max-w-md w-full text-center">
         
 

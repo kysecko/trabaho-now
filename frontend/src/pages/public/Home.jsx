@@ -58,7 +58,6 @@ const features = [
   { icon: ClockIcon, title: "Live availability", text: "Available, Booked, On-job or Offline in real time." },
   { icon: StarIcon, title: "Ratings both ways", text: "Clients and jobseekers review each other after every job." },
   { icon: BoltIcon, title: "Urgency levels", text: "Emergency, same-day or scheduled bookings." },
-  { icon: CreditCardIcon, title: "Pay with GCash or Maya", text: "Buy credits online. Jobseekers never pay credits." },
   { icon: CheckBadgeIcon, title: "Fair cancellations", text: "Early cancels are free. Late ones are reviewed by an admin." },
 ];
 

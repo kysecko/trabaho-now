@@ -282,8 +282,8 @@ export default function FindJobseekers() {
                 </div>
             </section>
 
-            <div className="text-lg font-bold text-navy">
-                {loading ? "Searching..." : `${total} jobseeker${total === 1 ? "" : "s"} found in`}{" "}
+            <div className="text-lg font-bold text-navy-2">
+                {loading ? "Finding jobseekers..." : `${total} jobseeker${total === 1 ? "" : "s"} found in`}{" "}
                 {!loading && <span className="text-primary">Sta. Maria</span>}
             </div>
 
