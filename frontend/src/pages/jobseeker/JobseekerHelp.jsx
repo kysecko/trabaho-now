@@ -44,11 +44,6 @@ const FAQS = [
     a: "Go to My Job Post and choose Add service. Add a title, category, your rate and a short description of what’s included.",
   },
   {
-    topic: "Payments",
-    q: "Where can I see my earnings?",
-    a: "Open Transactions. It lists received and upcoming payments, and shows your available balance.",
-  },
-  {
     topic: "Account",
     q: "How do I change my password or contact details?",
     a: "Open System Settings. You can update your name, mobile number, email and password there.",
