@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use App\Events\UserVerified;
-use App\Events\UserRejected;
 use App\Models\VerificationRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,17 +14,12 @@ class VerificationReviewController
     /** GET /admin/verifications?status=pending&role=client */
     public function index(Request $request): JsonResponse
     {
-        $query = VerificationRequest::with('user:id,name,email,role')
-            ->latest('id');
-
+        $query = VerificationRequest::with('user:id,name,email,role')->latest('id');
         $query->where('status', $request->query('status', 'pending'));
-
         if ($role = $request->query('role')) {
             $query->where('role', $role);
         }
-
         $page = $query->paginate((int) $request->query('per_page', 15));
-
         $page->getCollection()->transform(fn (VerificationRequest $v) => [
             'id' => $v->id,
             'status' => $v->status,
@@ -35,7 +28,6 @@ class VerificationReviewController
             'user' => $v->user,
             'name' => trim(($v->data['firstName'] ?? '') . ' ' . ($v->data['lastName'] ?? '')),
         ]);
-
         return response()->json($page);
     }
 
@@ -43,7 +35,6 @@ class VerificationReviewController
     public function show(VerificationRequest $verification): JsonResponse
     {
         $verification->load('user:id,name,email,role', 'reviewer:id,name');
-
         $documents = collect($verification->documents)->map(fn ($path, $key) => [
             'key' => $key,
             'mime' => Storage::disk('local')->mimeType($path),
@@ -92,12 +83,6 @@ class VerificationReviewController
             ])->save();
         });
 
-        // 🔥 REAL-TIME BROADCAST: Fire the event AFTER the DB commit succeeds
-        broadcast(new UserVerified($verification->user->id));
-
-        // TODO: notify the user (your Notifications / Mail folders)
-        // $verification->user->notify(new VerificationReviewed($verification));
-
         return response()->json(['message' => 'Verification approved.']);
     }
 
@@ -127,22 +112,13 @@ class VerificationReviewController
             ])->save();
         });
 
-        // 🔥 REAL-TIME BROADCAST: Notify the user they were rejected (optional)
-        broadcast(new UserRejected($verification->user->id, $validated['reason']));
-
         return response()->json(['message' => 'Verification rejected.']);
     }
 
-    /**
-     * GET signed URL: streams one private document.
-     * Protected by the `signed` middleware (links expire after 10 minutes),
-     * so it works inside <img src="..."> without an auth header.
-     */
     public function document(VerificationRequest $verification, string $key)
     {
         $path = $verification->documents[$key] ?? null;
         abort_unless($path && Storage::disk('local')->exists($path), 404);
-
         return Storage::disk('local')->response($path);
     }
 }

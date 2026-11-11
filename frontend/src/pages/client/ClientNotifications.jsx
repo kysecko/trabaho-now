@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   BellIcon,
   BriefcaseIcon,
-  CreditCardIcon,
+  WalletIcon,
   ShieldCheckIcon,
   StarIcon,
   CheckIcon,
@@ -12,7 +12,7 @@ import { useVerificationStatus } from "../../hooks/useVerificationStatus";
 
 const TYPES = {
   booking: { label: "Bookings", icon: BriefcaseIcon, tone: "bg-blue-50 text-blue-600" },
-  payment: { label: "Payments", icon: CreditCardIcon, tone: "bg-green-50 text-green-600" },
+  credits: { label: "Credits", icon: WalletIcon, tone: "bg-green-50 text-green-600" },
   review: { label: "Reviews", icon: StarIcon, tone: "bg-yellow-50 text-yellow-600" },
   account: { label: "Account", icon: ShieldCheckIcon, tone: "bg-orange-50 text-[#ff4d00]" },
 };
@@ -25,7 +25,7 @@ const ALL_TABS = [
 
 const SAMPLE = [
   { id: 1, type: "booking", title: "Request accepted", body: "Apolinario Mabini accepted your plumbing request for Nov 12.", time: "5 min ago", read: false },
-  { id: 2, type: "payment", title: "Payment received", body: "Your ₱600 payment for the plumbing job was recorded.", time: "2 hours ago", read: false },
+  { id: 2, type: "credits", title: "Credits added", body: "1,000 credits from your GCash top-up are now in your balance.", time: "2 hours ago", read: false },
   { id: 3, type: "account", title: "ID under review", body: "We’re reviewing your ID. This usually takes 24–48 hours.", time: "Yesterday", read: false },
   { id: 4, type: "review", title: "How was your job?", body: "Rate your recent job with Apolinario Mabini to help other clients.", time: "2 days ago", read: true },
   { id: 5, type: "booking", title: "Request declined", body: "A jobseeker couldn’t take your Nov 8 request. Try another worker.", time: "Last week", read: true },
@@ -93,11 +93,10 @@ export default function ClientNotifications() {
               key={tab.key}
               type="button"
               onClick={() => setFilter(tab.key)}
-              className={`shrink-0 cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-                active
+              className={`shrink-0 cursor-pointer rounded-full border px-4 py-1.5 text-sm font-medium transition ${active
                   ? "border-[#ff4d00] bg-[#ff4d00] text-white"
                   : "border-gray-300 bg-white text-navy hover:border-[#ff4d00]"
-              }`}
+                }`}
             >
               {tab.label}
               {tab.key === "unread" && unreadCount > 0 && (
@@ -129,9 +128,8 @@ export default function ClientNotifications() {
             return (
               <li
                 key={n.id}
-                className={`group flex items-start gap-3 px-4 py-4 transition ${
-                  n.read ? "bg-white" : "bg-orange-50/50"
-                }`}
+                className={`group flex items-start gap-3 px-4 py-4 transition ${n.read ? "bg-white" : "bg-orange-50/50"
+                  }`}
               >
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${tone}`}>
                   <Icon className="h-5 w-5" aria-hidden="true" />
