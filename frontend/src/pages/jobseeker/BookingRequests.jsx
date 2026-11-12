@@ -44,8 +44,10 @@ const timeAgo = (mins) => {
   return `${d} day${d === 1 ? "" : "s"} ago`;
 };
 
-const initials = (name = "") =>
-  name.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+const initials = (name = "") => {
+  const safeName = typeof name === "string" ? name : String(name || "");
+  return safeName.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+};
 
 /* ---------- Constants ---------- */
 const DECLINE_REASONS = [
