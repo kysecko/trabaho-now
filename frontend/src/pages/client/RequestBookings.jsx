@@ -9,6 +9,8 @@ import {
   XCircleIcon,
   ArrowRightIcon,
   ChatBubbleLeftRightIcon,
+  XMarkIcon,
+  StarIcon, // <-- Added for Review
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
 import { useVerificationStatus } from "../../hooks/useVerificationStatus";
@@ -32,18 +34,115 @@ const STATUS_LABEL = {
   cancelled: "Cancelled",
 };
 
+/* ---------- REVIEW DIALOG (Inline) ---------- */
+function ReviewDialog({ open, onClose, onSubmit, isReport = false }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  if (!open) return null;
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await onSubmit({ rating: isReport ? 1 : rating, comment, type: isReport ? "report" : "review" });
+      onClose();
+    } catch (error) {
+      alert(error.message || "Failed to submit");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      
+      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <button onClick={onClose} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
+          <XMarkIcon className="h-5 w-5" />
+        </button>
+
+        <h2 className="text-xl font-bold text-navy mb-2">
+          {isReport ? "Report an Issue" : "Leave Feedback"}
+        </h2>
+        <p className="text-sm text-muted mb-4">
+          {isReport 
+            ? "Tell us what went wrong. Our admin team will review this." 
+            : "How was your experience with this worker?"}
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          {!isReport && (
+            <div className="flex gap-2 mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  type="button"
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className={`p-1 transition ${rating >= star ? "text-yellow-400" : "text-gray-300"}`}
+                >
+                  <StarIcon className="h-8 w-8" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          <textarea
+            required
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={isReport ? "Please describe the issue..." : "Share a few words about their service..."}
+            rows={3}
+            className="w-full rounded-xl border border-gray-300 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#ff4d00] mb-4 resize-none"
+          />
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-xl border border-gray-300 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={busy || !comment.trim()}
+              className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white transition disabled:opacity-50 ${
+                isReport ? "bg-red-600 hover:bg-red-700" : "bg-[#ff4d00] hover:bg-[#e64500]"
+              }`}
+            >
+              {busy ? "Submitting..." : isReport ? "Submit Report" : "Submit Review"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+/* ------------------------------------------- */
+
+
 export default function RequestBookings() {
   const { user } = useAuth();
   const { isVerified } = useVerificationStatus();
   const navigate = useNavigate();
 
   const [rows, setRows] = useState([]);
+  const [showBanner, setShowBanner] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [tab, setTab] = useState("pending");
+  
+  // Modals state
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelling, setCancelling] = useState(false);
   const [chatId, setChatId] = useState(null);
+  
+  // Review / Report state
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [isReporting, setIsReporting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,6 +175,7 @@ export default function RequestBookings() {
     }),
     [rows]
   );
+  
   const visible = useMemo(
     () => rows.filter((r) => r.status === tab),
     [rows, tab]
@@ -118,6 +218,11 @@ export default function RequestBookings() {
     }
   }
 
+  async function submitReview(data) {
+    await bookings.review(reviewTarget, data);
+    alert(isReporting ? "Report submitted to admin." : "Review submitted. Thank you!");
+  }
+
   return (
     <main className="w-full space-y-8 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -136,32 +241,43 @@ export default function RequestBookings() {
         </button>
       </div>
 
-      {/* Welcome banner — reworded to drop the stale "credits" promise */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-navy to-navy-2 p-6 sm:p-8 text-white shadow-xl">
-        <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/5 blur-2xl" />
-        <div className="absolute -left-10 -bottom-10 h-48 w-48 rounded-full bg-[#ff4d00]/10 blur-2xl" />
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="bg-white/10 p-4 rounded-full shrink-0 backdrop-blur-md">
-            <SparklesIcon className="w-8 h-8 text-[#ff4d00]" />
-          </div>
-          <div className="flex-1">
-            <h2 className="text-xl font-extrabold mb-1">Ready to hire? 🎉</h2>
-            <p className="text-gray-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-              Your identity is fully verified. Browse trusted workers in your
-              area and send booking requests. Agree on the rate directly with
-              the worker, then track progress here.
-            </p>
-            <button
-              onClick={() => navigate("/client/search")}
-              className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-white hover:text-[#ff4d00] transition-colors"
-            >
-              Browse Jobseekers <ArrowRightIcon className="w-4 h-4" />
-            </button>
+      {/* Welcome banner */}
+      {showBanner && (
+        <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-navy to-navy-2 p-6 sm:p-8 text-white shadow-xl">
+          <button
+            onClick={() => setShowBanner(false)}
+            className="absolute right-4 top-4 z-20 rounded-full p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
+            aria-label="Dismiss banner"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+
+          <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/5 blur-2xl" />
+          <div className="absolute -left-10 -bottom-10 h-48 w-48 rounded-full bg-[#ff4d00]/10 blur-2xl" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-6 pr-8">
+            <div className="bg-white/10 p-4 rounded-full shrink-0 backdrop-blur-md">
+              <SparklesIcon className="w-8 h-8 text-[#ff4d00]" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-extrabold mb-1">Ready to hire? 🎉</h2>
+              <p className="text-gray-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+                Your identity is fully verified. Browse trusted workers in your
+                area and send booking requests. Agree on the rate directly with
+                the worker, then track progress here.
+              </p>
+              <button
+                onClick={() => navigate("/client/search")}
+                className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-white hover:text-[#ff4d00] transition-colors"
+              >
+                Browse Jobseekers <ArrowRightIcon className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Stats — now derived */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={ClockIcon} color="blue" label="Active" value={counts.accepted} />
         <StatCard icon={CalendarDaysIcon} color="orange" label="Pending" value={counts.pending} />
@@ -230,7 +346,7 @@ export default function RequestBookings() {
                   </div>
                   <p className="text-xs text-gray-600">
                     {b.jobseeker?.name ?? "Worker"} <span className="text-gray-400">|</span>{" "}
-                    {b.service?.title ?? "Service"} <span className="text-gray-400">|</span>{" "}
+                    {b.service?.name ?? "Service"} <span className="text-gray-400">|</span>{" "}
                     {b.scheduled_at
                       ? new Date(b.scheduled_at).toLocaleString("en-PH", {
                           month: "short",
@@ -251,22 +367,47 @@ export default function RequestBookings() {
                   )}
                 </div>
 
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 flex-wrap gap-2 items-center">
                   {(b.status === "pending" || b.status === "accepted") && (
                     <button
                       onClick={() => setCancelTarget(b.id)}
-                      className="px-5 py-1.5 text-xs font-bold text-red-500 bg-transparent border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                      className="px-4 py-1.5 text-xs font-bold text-red-500 bg-transparent border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
                     >
                       Cancel
                     </button>
                   )}
+                  
                   {["accepted", "in_progress", "completed"].includes(b.status) && (
                     <button
                       onClick={() => setChatId(b.id)}
-                      className="inline-flex items-center gap-1 px-5 py-1.5 text-xs font-bold text-green-600 bg-transparent border border-green-200 rounded-lg hover:bg-green-50 transition-colors"
+                      className="inline-flex items-center gap-1 px-4 py-1.5 text-xs font-bold text-green-600 bg-transparent border border-green-200 rounded-lg hover:bg-green-50 transition-colors"
                     >
                       <ChatBubbleLeftRightIcon className="w-4 h-4" /> Message
                     </button>
+                  )}
+
+                  {/* Review & Report Buttons for Completed Jobs */}
+                  {b.status === "completed" && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setReviewTarget(b.id);
+                          setIsReporting(false);
+                        }}
+                        className="inline-flex items-center gap-1 px-4 py-1.5 text-xs font-bold text-yellow-600 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors"
+                      >
+                        <StarIcon className="w-4 h-4" /> Review
+                      </button>
+                      <button
+                        onClick={() => {
+                          setReviewTarget(b.id);
+                          setIsReporting(true);
+                        }}
+                        className="px-4 py-1.5 text-xs font-bold text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Report
+                      </button>
+                    </>
                   )}
                 </div>
               </article>
@@ -281,6 +422,13 @@ export default function RequestBookings() {
         busy={cancelling}
         onClose={() => setCancelTarget(null)}
         onConfirm={confirmCancel}
+      />
+
+      <ReviewDialog
+        open={!!reviewTarget}
+        isReport={isReporting}
+        onClose={() => setReviewTarget(null)}
+        onSubmit={submitReview}
       />
 
       {chatId && (
