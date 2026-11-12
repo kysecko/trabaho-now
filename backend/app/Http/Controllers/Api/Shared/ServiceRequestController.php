@@ -33,6 +33,34 @@ class ServiceRequestController extends Controller
         return $serviceRequest->load(['client', 'jobseeker', 'service', 'events', 'messages.sender']);
     }
 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'jobseeker_id' => 'required|exists:users,id',
+            'service_id'   => 'required|exists:services,id',
+            'title'        => 'required|string|max:255',
+            'description'  => 'nullable|string',
+            'address'      => 'required|string|max:255',
+            'barangay'     => 'nullable|string|max:255',
+            'scheduled_at' => 'nullable|date',
+            'agreed_rate'  => 'nullable|integer|min:0',
+        ]);
+
+        $validated['client_id'] = $request->user()->id;
+        $validated['status'] = 'pending';
+
+        $serviceRequest = ServiceRequest::create($validated);
+
+        RequestEvent::create([
+            'service_request_id' => $serviceRequest->id,
+            'actor_id'           => $request->user()->id,
+            'actor_role'         => 'client',
+            'type'               => 'created',
+        ]);
+
+        return response()->json($serviceRequest->load('jobseeker:id,name'), 201);
+    }
+
     public function accept(Request $request, ServiceRequest $serviceRequest)
     {
         return $this->transition($request, $serviceRequest, 'accepted', ['pending']);

@@ -11,6 +11,7 @@ Route::post('/requests/{serviceRequest}/accept',    [ServiceRequestController::c
 Route::post('/requests/{serviceRequest}/decline',   [ServiceRequestController::class, 'decline']);
 Route::post('/requests/{serviceRequest}/complete',  [ServiceRequestController::class, 'complete']);
 Route::post('/requests/{serviceRequest}/cancel',    [ServiceRequestController::class, 'cancel']);
+Route::post('/requests', [ServiceRequestController::class, 'store']);
 
 // Chat
 Route::get('/requests/{serviceRequest}/messages',   [MessageController::class, 'index']);
