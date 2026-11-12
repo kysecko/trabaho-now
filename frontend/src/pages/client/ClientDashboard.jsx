@@ -64,13 +64,15 @@ export default function ClientDashboard() {
     };
   }, []);
 
-  // Unverified users see the modal first instead of being sent straight to /verify.
   const handleHire = (jobseekerId) => {
+    // 1. Check verification
     if (!isVerified) {
       setShowVerifyModal(true);
       return;
     }
-    navigate(`/client/requests/new?jobseeker=${jobseekerId}`);
+    
+    // 2. Navigate to the actual page (Profile or Booking Page)
+    navigate(`/client/jobseekers/${jobseekerId}`);
   };
 
   return (
