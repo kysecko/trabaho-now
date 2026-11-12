@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Broadcast;
 
 require __DIR__ . '/api/auth.php';
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
 // ─────────────────────────────────────────────────────────────
-// Public endpoints (no auth token required).
-// These identify the user by email from the request body.
+// Public endpoints
 // ─────────────────────────────────────────────────────────────
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password',  [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
@@ -22,8 +22,7 @@ Route::prefix('public')->group(function () {
     require __DIR__ . '/api/public.php';
 });
 
-// Admin document viewer. NOT behind auth: <img src> can't send a bearer token.
-// The `signed` middleware makes each link expire (10 min) and be tamper-proof.
+// Admin document viewer (Signed URLs)
 Route::get(
     '/admin/verifications/{verification}/documents/{key}',
     [VerificationReviewController::class, 'document']
@@ -32,7 +31,7 @@ Route::get(
     ->middleware('signed');
 
 // ─────────────────────────────────────────────────────────────
-// Authenticated endpoints (require a Sanctum bearer token).
+// Authenticated endpoints
 // ─────────────────────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -41,16 +40,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::middleware('verified')->group(function () {
-        // Shared routes include the verification submit, so they must stay
-        // OUTSIDE `verified.identity` (unverified users need to reach them).
+
+        // Shared routes (verification submission)
         require __DIR__ . '/api/shared.php';
 
-        // Anything that needs an approved identity goes here (hiring, requests...).
+        // Anything that needs an approved identity goes here
         Route::middleware('verified.identity')->group(function () {
+
+            // NEW: Request Lifecycle & Chat
+            require __DIR__ . '/api/requests.php';
+
+            // Uncomment these once you move your client/jobseeker specific routes out
             // require __DIR__ . '/api/client.php';
             // require __DIR__ . '/api/jobseeker.php';
         });
 
+        // Admin routes
         Route::prefix('admin')->middleware('role:admin')->group(function () {
             require __DIR__ . '/api/admin.php';
         });

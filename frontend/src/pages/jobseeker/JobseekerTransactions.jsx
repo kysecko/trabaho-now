@@ -11,8 +11,6 @@ import {
 import { useVerificationStatus } from "../../hooks/useVerificationStatus";
 import LockedState from "../../components/ui/dashboard/LockedState";
 
-/* Demo data. Pass real jobs with the `jobs` prop:
-   [{ id, service, client, date: "2026-11-01", location, status: "completed" | "upcoming" | "cancelled" }] */
 const DEMO_JOBS = [
   { id: 1, service: "Aircon Repair", client: "Pedro Reyes", date: "2026-11-01", location: "Brgy. Citrus", status: "completed" },
   { id: 2, service: "Carpentry", client: "Maria Santos", date: "2026-10-28", location: "Brgy. Muzon", status: "completed" },

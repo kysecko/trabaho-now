@@ -25,8 +25,14 @@ export const approveVerification = (id) =>
 
 export const rejectVerification = (id, reason) =>
   api.post(`/admin/verifications/${id}/reject`, { reason });
+export const listCancellations = (cancelledByRole) =>
+  api.get(
+    `/admin/cancellations${cancelledByRole ? `?cancelled_by_role=${cancelledByRole}` : ""}`
+  );
 
-// Users
+export const adminCancelRequest = (id, { reason, note }) =>
+  api.post(`/admin/requests/${id}/cancel`, { reason, note });
+
 export const getUsers = (role, status) => {
   const params = new URLSearchParams();
   if (role) params.append("role", role);
