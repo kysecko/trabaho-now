@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServiceRequest extends Model
 {
@@ -16,7 +17,6 @@ class ServiceRequest extends Model
         'declined',
         'cancelled',
     ];
-
 
     protected $fillable = [
         'client_id',
@@ -45,13 +45,36 @@ class ServiceRequest extends Model
         'cancelled_at' => 'datetime',
     ];
 
+    // --- Original Relationships (Restored) ---
 
-    public function events(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'client_id');
+    }
+
+    public function jobseeker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'jobseeker_id');
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
+    // --- New Relationships & Methods ---
+
+    public function events(): HasMany
     {
         return $this->hasMany(RequestEvent::class)->latest();
     }
 
-    public function messages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function messages(): HasMany
     {
         return $this->hasMany(Message::class)->oldest();
     }
