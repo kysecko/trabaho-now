@@ -1,6 +1,9 @@
 import http from "./client"; 
 
 const bookings = {
+  // Create a new request
+  create: (data) => http.post("/requests", data),
+
   // lifecycle
   list: (status) => http.get(`/requests${status ? `?status=${status}` : ""}`),
   show: (id) => http.get(`/requests/${id}`),
