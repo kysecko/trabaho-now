@@ -20,9 +20,7 @@ class ServiceRequestController extends Controller
         $column = $role === 'jobseeker' ? 'jobseeker_id' : 'client_id';
 
         // This is line 25 where it was crashing
-        return ServiceRequest::with(['client:id,name', 'jobseeker:id,name', 'service:id,title', 'events', 'messages'])
-            ->where($column, $user->id)
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
+        return ServiceRequest::with(['client:id,name', 'jobseeker:id,name', 'service:id,name', 'events', 'messages'])
             ->latest()
             ->paginate(20);
     }
