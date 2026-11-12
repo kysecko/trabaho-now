@@ -230,7 +230,7 @@ export default function RequestBookings() {
                   </div>
                   <p className="text-xs text-gray-600">
                     {b.jobseeker?.name ?? "Worker"} <span className="text-gray-400">|</span>{" "}
-                    {b.service?.title ?? "Service"} <span className="text-gray-400">|</span>{" "}
+                    {b.service?.name ?? "Service"} <span className="text-gray-400">|</span>{" "}
                     {b.scheduled_at
                       ? new Date(b.scheduled_at).toLocaleString("en-PH", {
                           month: "short",
