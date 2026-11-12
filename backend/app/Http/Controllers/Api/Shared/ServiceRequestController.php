@@ -14,13 +14,15 @@ class ServiceRequestController extends Controller
     {
         $user = $request->user();
 
-        // Handle both string and Enum role types
+        // FIX: Handle Enum vs String
         $role = $user->role instanceof \BackedEnum ? $user->role->value : $user->role;
+
         $column = $role === 'jobseeker' ? 'jobseeker_id' : 'client_id';
 
-        return ServiceRequest::with(['client:id,name', 'jobseeker:id,name', 'service:id,title'])
+        // This is line 25 where it was crashing
+        return ServiceRequest::with(['client:id,name', 'jobseeker:id,name', 'service:id,title', 'events', 'messages'])
             ->where($column, $user->id)
-            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->latest()
             ->paginate(20);
     }

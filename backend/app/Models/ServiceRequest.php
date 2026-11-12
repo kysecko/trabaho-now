@@ -45,23 +45,19 @@ class ServiceRequest extends Model
         'cancelled_at' => 'datetime',
     ];
 
-    public function client(): BelongsTo
+
+    public function events(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->belongsTo(User::class, 'client_id');
+        return $this->hasMany(RequestEvent::class)->latest();
     }
 
-    public function jobseeker(): BelongsTo
+    public function messages(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->belongsTo(User::class, 'jobseeker_id');
+        return $this->hasMany(Message::class)->oldest();
     }
 
-    public function service(): BelongsTo
+    public function isOpen(): bool
     {
-        return $this->belongsTo(Service::class);
-    }
-
-    public function review(): HasOne
-    {
-        return $this->hasOne(Review::class);
+        return in_array($this->status, ['pending', 'accepted', 'in_progress']);
     }
 }
