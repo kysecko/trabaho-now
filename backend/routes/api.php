@@ -14,6 +14,26 @@ Route::get('/run-migrations', function () {
     }
 });
 
+Route::get('/test-requests', function () {
+    try {
+        $user = auth()->user() ?? \App\Models\User::where('role', 'client')->first();
+        $role = $user->role instanceof \BackedEnum ? $user->role->value : $user->role;
+        $column = $role === 'jobseeker' ? 'jobseeker_id' : 'client_id';
+
+        $requests = \App\Models\ServiceRequest::with(['client:id,name', 'jobseeker:id,name', 'service:id,title', 'events', 'messages'])
+            ->where($column, $user->id)
+            ->paginate(20);
+
+        return response()->json(['success' => true, 'data' => $requests]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
+});
+
 require __DIR__ . '/api/auth.php';
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
