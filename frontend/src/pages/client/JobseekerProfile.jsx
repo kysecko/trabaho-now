@@ -104,7 +104,7 @@ export default function JobseekerProfile() {
         <div className="w-full max-w-5xl mx-auto space-y-4 sm:space-y-6 pb-20 px-4 sm:px-6 lg:px-0">
             {/* Back Button */}
             <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/client/search')}
                 className="flex items-center gap-2 text-sm font-semibold text-orange-600 hover:underline cursor-pointer"
             >
                 <ArrowLeftIcon className="h-4 w-4" /> Back to Jobseekers List
