@@ -101,7 +101,7 @@ export default function JobseekerProfile() {
     }
 
     return (
-        <div className="w-full max-w-5xl mx-auto space-y-4 sm:space-y-6 pb-20 px-4 sm:px-6 lg:px-0">
+        <div className="space-y-6 sm:space-y-6 pb-20 px-4 sm:px-4 lg:px-0">
             {/* Back Button */}
             <button
                 onClick={() => navigate('/client/search')}
