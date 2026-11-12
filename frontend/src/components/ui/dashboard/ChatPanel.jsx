@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import bookings from "../api/bookings";
+import bookings from "../../../api/bookings";
 
 export default function ChatPanel({ requestId, currentUserId }) {
   const [messages, setMessages] = useState([]);
