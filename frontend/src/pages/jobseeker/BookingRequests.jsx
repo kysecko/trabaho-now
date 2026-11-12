@@ -308,7 +308,7 @@ export default function BookingRequests({ initialRequests = null }) {
           list.map((r) => ({
             status: "pending",
             reason: "",
-            client: r.client?.name ?? "Client",
+            client: typeof r.client === "string" ? r.client : (r.client?.name ?? "Client"),
             job: r.title ?? r.service?.title ?? "Service",
             date: r.scheduled_at?.slice(0, 10) ?? daysFromNow(0),
             time: r.scheduled_at
