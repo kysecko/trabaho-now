@@ -48,7 +48,7 @@ export default function ForgotPassword() {
           </p>
 
           <p className="text-sm text-muted">
-            The link expires in 60 minutes. Don't forget to check your spam folder if it doesn't arrive.
+            The link expires in 5 minutes. Don't forget to check your spam folder if it doesn't arrive.
           </p>
         </div>
 

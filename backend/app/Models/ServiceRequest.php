@@ -9,8 +9,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class ServiceRequest extends Model
 {
     public const STATUSES = [
-        'pending', 'accepted', 'in_progress', 'completed', 'declined', 'cancelled',
+        'pending',
+        'accepted',
+        'in_progress',
+        'completed',
+        'declined',
+        'cancelled',
     ];
+
 
     protected $fillable = [
         'client_id',
@@ -24,11 +30,19 @@ class ServiceRequest extends Model
         'agreed_rate',
         'status',
         'completed_at',
+
+        // Cancellation fields
+        'cancelled_at',
+        'cancelled_by',
+        'cancelled_by_role',
+        'cancel_reason',
+        'cancel_note',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
         'completed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function client(): BelongsTo

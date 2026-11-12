@@ -39,4 +39,18 @@ export default {
   post: (url, body) => request(url, { method: "POST", body: body instanceof FormData ? body : JSON.stringify(body) }),
   put: (url, body) => request(url, { method: "PUT", body: body instanceof FormData ? body : JSON.stringify(body) }),
   delete: (url) => request(url, { method: "DELETE" }),
+
+ 
+  blob: async (url) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_URL}${url}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      const err = new Error("Download failed");
+      err.status = res.status;
+      throw err;
+    }
+    return res.blob();
+  },
 };

@@ -14,7 +14,8 @@ import {
   CalendarDaysIcon,
   ArrowRightOnRectangleIcon,
   Cog6ToothIcon,
-  ExclamationTriangleIcon, // Added for the modal
+  ExclamationTriangleIcon,
+  XCircleIcon
 } from "@heroicons/react/24/outline";
 
 // Solid Icons 
@@ -27,6 +28,7 @@ import {
   WrenchScrewdriverIcon as WrenchScrewdriverSolid,
   ChartBarIcon as ChartBarSolid,
   Cog6ToothIcon as Cog6ToothSolid,
+  XCircleIcon as XCircleSolid,
 } from "@heroicons/react/24/solid";
 
 export default function AdminLayout() {
@@ -45,6 +47,7 @@ export default function AdminLayout() {
     { to: "/admin", label: "Dashboard", icon: Squares2X2Icon, activeIcon: Squares2X2Solid, end: true },
     { to: "/admin/manage-users", label: "User Management", icon: UsersIcon, activeIcon: UsersSolid },
     { to: "/admin/verification", label: "Verification Queue", icon: ShieldCheckIcon, activeIcon: ShieldCheckSolid },
+    { to: "/admin/cancellations", label: "Cancellations", icon: XCircleIcon, activeIcon: XCircleSolid }, // NEW
     { to: "/admin/transactions", label: "Transaction Logs", icon: DocumentTextIcon, activeIcon: DocumentTextSolid },
     { to: "/admin/services", label: "Service Listings", icon: WrenchScrewdriverIcon, activeIcon: WrenchScrewdriverSolid },
     { to: "/admin/reports", label: "Reports", icon: ChartBarIcon, activeIcon: ChartBarSolid },
@@ -56,6 +59,7 @@ export default function AdminLayout() {
     if (pathname === "/admin" || pathname === "/admin/dashboard") return "Overview";
     if (pathname.includes("/manage-users")) return "User Management";
     if (pathname.includes("/verification")) return "Verification Queue";
+    if (pathname.includes("/cancellations")) return "Cancellations";
     if (pathname.includes("/transactions")) return "Transaction Logs";
     if (pathname.includes("/services")) return "Service Listings";
     if (pathname.includes("/reports")) return "Reports";

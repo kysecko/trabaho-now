@@ -26,5 +26,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             VerificationSeeder::class,
         ]);
+
+        // Create sample service requests, events, and messages.
+        $this->call([
+            ServiceRequestSeeder::class,
+            RequestEventSeeder::class,
+            MessageSeeder::class,
+        ]);
     }
 }
